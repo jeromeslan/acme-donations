@@ -1,0 +1,52 @@
+---
+alwaysApply: true
+globs:
+  - "**/*"
+---
+# Standards globaux
+- Versions verrouillées: PHP 8.4, Laravel 12.x, Vue 3.5.21, Tailwind 4.1.13, Redis 7.x, Node 20 LTS.
+- API-first: la spec `shared/openapi/acme.yaml` est source de vérité.
+- Sécurité: pas de secrets en code, cookies HttpOnly/Secure/SameSite.
+- Logs structurés JSON, `request_id` obligatoire, pas de PII.
+- Tests obligatoires et CI verte avant merge.
+
+---
+alwaysApply: true
+---
+# Monorepo & Vision
+- Monorepo "acme-donations" avec trois dossiers: api/ (Laravel), web/ (Vue), shared/ (OpenAPI & types); architecture API-first modulaire prête à l’extraction en microservices.
+- Cibler une DX d’évaluation rapide (Docker one-liner) et une portabilité front/back future sans dette structurelle.
+
+# Stack & Versions (verrouillage)
+- Backend: PHP 8.4, Laravel 12.x; Frontend: Vue 3.5.x + Vite + TypeScript + Pinia + Vue Router; CSS: Tailwind CSS 4.1.x; Node: 20 LTS; Cache: Redis 7.x; Queues: Laravel (database en dev, Redis prêt).
+- Conserver une matrice CI PHP 8.3/8.4 et DB SQLite/PG pour garantir compatibilité et portabilité.
+
+# Principes d’architecture
+- API-first: l’API définit le contrat; la spec OpenAPI vit dans shared/openapi et est source de vérité pour les clients.
+- Monolithe modulaire: modules fonctionnels stricts en backend (Auth, Campaign, Donation, Payment, Admin, Notification) avec frontières par API interne; extraction progressive vers services.
+- Séparation nette lecture/écriture: endpoints GET optimisés cache; mutations strictes, idempotence où pertinent (paiements).
+
+# Sécurité & conformité
+- Auth SPA côté front via cookies Sanctum (stateful), CSRF requis, jamais de tokens en localStorage/sessionStorage, CORS strict, Secure/HttpOnly/SameSite pour cookies.
+- Secrets via variables d’environnement/CI (jamais en repo); pas de PII dans logs; masking d’IDs sensibles; journaux structurés.
+
+# Qualité & Tests
+- Couverture minimale: backend (Pest unit/feature), frontend (Vitest composants/stores), E2E (Playwright) sur le compose docker.
+- Static analysis: PHPStan level 8 (Larastan), TS strict; lint front (ESLint/TS) et conventions PSR-12 côté PHP.
+
+# Performance & Cache
+- Redis pour listings/recherches/détails campagnes et stats dérivées; TTL explicites; invalidations événementielles; jobs de warmup ciblés.
+- Build web optimisé: code-splitting, prefetch/prerender contrôlé, images responsives, CSS tree-shaken.
+
+# Observabilité & Exploitabilité
+- Endpoint /health (DB/Redis/Queues); Horizon optionnel pour workers; corrélation par X-Request-ID; logs JSON par module.
+- Runbooks: relancer workers, purger caches, rejouer files, basculer passerelle paiement mock/stripe via config.
+
+# CI/CD
+- Pipelines front/back parallèles; job E2E sur docker-compose; publication artefacts (build web, rapports tests).
+- Faille supply-chain: audits deps (composer audit/npm audit – ci-friendly), verrous de versions.
+
+# Livrables & Démo
+- README à la racine (lancement one-liner, comptes seed, URL, parcours démo), READMEs spécifiques api/ et web/.
+- Script make ou ./scripts/dev.sh pour build, migrations/seeders, et démarrage complet.
+

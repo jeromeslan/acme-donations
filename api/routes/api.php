@@ -1,0 +1,44 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\{AuthController, CampaignController, DonationController, AdminController};
+
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+});
+
+// NOTE: login/logout/me are mounted under web middleware in routes/web.php to ensure session is present
+
+// Campaigns
+Route::get('/campaigns', [CampaignController::class, 'index']);
+Route::get('/campaigns/featured', [CampaignController::class, 'featured']);
+Route::get('/campaigns/{campaign}', [CampaignController::class, 'show']);
+Route::post('/campaigns', [CampaignController::class, 'store'])->middleware('auth:sanctum');
+Route::put('/campaigns/{campaign}', [CampaignController::class, 'update'])->middleware('auth:sanctum');
+Route::delete('/campaigns/{campaign}', [CampaignController::class, 'destroy'])->middleware('auth:sanctum');
+
+// Donations
+Route::post('/campaigns/{campaign}/donations', [DonationController::class, 'store']);
+Route::get('/me/donations', [DonationController::class, 'myDonations'])->middleware('auth:sanctum');
+Route::get('/donations/{donation}/receipt', [DonationController::class, 'receipt'])->middleware('auth:sanctum');
+
+// Admin KPIs
+Route::get('/admin/kpis', [AdminController::class, 'kpis'])->middleware('auth:sanctum');
+
+
+// DEBUG (temporary): counts and sample campaigns
+Route::get('/debug/counts', function () {
+    return response()->json([
+        'users' => \App\Models\User::count(),
+        'categories' => \App\Models\Category::count(),
+        'campaigns' => \App\Models\Campaign::count(),
+        'donations' => \App\Models\Donation::count(),
+    ]);
+});
+
+Route::get('/debug/campaigns', function () {
+    return \App\Models\Campaign::query()->with('category')->orderByDesc('id')->limit(5)->get();
+});
+
+

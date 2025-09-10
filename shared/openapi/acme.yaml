@@ -1,0 +1,195 @@
+openapi: 3.0.3
+info:
+  title: ACME Donations API
+  version: 0.1.0
+servers:
+  - url: http://localhost:8080
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+  /api/campaigns:
+    get:
+      summary: List campaigns
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string, enum: [draft, pending, active, completed, archived] }
+        - in: query
+          name: category_id
+          schema: { type: integer }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Paginated campaigns
+    post:
+      summary: Create campaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, goal_amount, category_id]
+              properties:
+                title: { type: string }
+                description: { type: string }
+                goal_amount: { type: number }
+                category_id: { type: integer }
+                featured: { type: boolean }
+      responses:
+        '201': { description: Created }
+  /api/campaigns/featured:
+    get:
+      summary: Featured campaigns
+      responses:
+        '200': { description: OK }
+  /api/campaigns/{id}:
+    get:
+      summary: Get campaign
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: OK }
+    put:
+      summary: Update campaign
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: OK }
+    delete:
+      summary: Delete campaign
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: No Content }
+  /api/campaigns/{id}/donations:
+    post:
+      summary: Create donation (mock)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount: { type: number, minimum: 1 }
+      responses:
+        '202': { description: Accepted }
+  /api/me/donations:
+    get:
+      summary: My donations
+      responses:
+        '200': { description: OK }
+  /api/donations/{id}/receipt:
+    get:
+      summary: Get donation receipt
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: OK }
+  /api/admin/kpis:
+    get:
+      summary: Admin KPIs
+      responses:
+        '200': { description: OK }
+  /sanctum/csrf-cookie:
+    get:
+      summary: Get CSRF cookie for Sanctum SPA auth
+      responses:
+        '204': { description: No Content }
+  /api/login:
+    post:
+      summary: Login (SPA, cookie-based)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+      responses:
+        '204': { description: Authenticated }
+        '422': { description: Validation error }
+  /api/logout:
+    post:
+      summary: Logout
+      responses:
+        '204': { description: Logged out }
+  /api/campaigns:
+    get:
+      summary: List campaigns
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Paginated campaigns
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCampaigns'
+  /internal/payments/notify:
+    post:
+      summary: Internal webhook for payment events
+      responses:
+        '202': { description: Accepted }
+
+components:
+  schemas:
+    Campaign:
+      type: object
+      required: [id, title, status]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        status: { type: string, enum: [draft, pending_review, published, archived] }
+        goalAmount: { type: number }
+        donatedAmount: { type: number }
+    PaginatedCampaigns:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Campaign' }
+        meta:
+          type: object
+          properties:
+            current_page: { type: integer }
+            last_page: { type: integer }
+            total: { type: integer }
+
+

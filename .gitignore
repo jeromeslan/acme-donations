@@ -1,0 +1,32 @@
+# Node
+node_modules/
+.pnpm-store/
+.npm/
+web/node_modules/
+web/.vite/
+
+# PHP/Laravel
+vendor/
+api/vendor/
+api/storage/*.key
+api/storage/app/
+api/storage/framework/
+api/storage/logs/
+api/.env
+
+# OS/Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Docker
+.env.docker.local
+.docker/
+
+# Generated
+shared/types/
+coverage/
+reports/
+
+

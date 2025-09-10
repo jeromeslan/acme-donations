@@ -1,0 +1,48 @@
+---
+alwaysApply: true
+globs:
+  - "api/**"
+---
+# Versions & Outils
+- PHP 8.4, Laravel 12.x, Composer 2; tests Pest; static analysis PHPStan level 8 (Larastan).
+- Redis 7.x pour cache/sessions/queues (optionnel en dev: driver database pour queues).
+
+# Modulaire & Frontières
+- Utiliser nwidart/laravel-modules: modules Auth, Campaign, Donation, Payment, Admin, Notification (routes, services, migrations, seeders, tests par module).
+- Communication inter-modules via endpoints internes (préfixés /internal/*), guards/middlewares dédiés, pas d’appel direct cross-module hors contrat HTTP.
+
+# API-first & Contrats
+- RESTful, ressources et pagination homogènes; erreurs structurées (code/message/details), idempotency-key pour opérations sensibles (paiements).
+- La spec OpenAPI (shared/openapi/*.yaml) décrit les endpoints publics/internal; générer clients côté web à partir de cette spec.
+
+# Auth & RBAC
+- Sanctum SPA cookies stateful: CSRF cookie + session cookie HttpOnly/Secure/SameSite; pas de tokens exposés au front.
+- Rôles/permissions avec spatie/laravel-permission; Policies pour contrôler accès aux campagnes/dons/admin; logs d’audit d’accès.
+
+# Cache & Performance
+- Redis pour listes/consultations campagne et stats; TTL explicites; invalidations sur événements CRUD (create/update/delete donation/campaign).
+- Pré-chauffage (jobs) après bulk updates; ne pas cacher réponses POST/PUT/DELETE.
+
+# Files d’attente & Jobs
+- Driver queue database en dev; Redis en environnements de charge; files nommées: donations, notifications, cache.
+- Jobs idempotents avec retry/backoff; utiliser Horizon (si activé) pour supervision, metrics et équilibrage workers.
+
+# Paiements
+- Interface PaymentGateway avec implémentation Mock par défaut; Stripe-ready (idempotency keys, webhooks, statut transaction).
+- Orchestration asynchrone: traitement don, émission reçu, échecs journalisés; métriques de latence/succès exposées au module Admin.
+
+# ORM & Données (Eloquent)
+- Nommage entités/relations explicite; migrations idempotentes; contraintes FK + index; soft-deletes là où pertinent; timestamps.
+- Validation métier en services; DTO/Resources pour sérialisation; pas d’accès direct non-typé aux arrays d’input.
+
+# Observabilité
+- /health: DB, Redis, Queues; logs JSON structurés (niveau, module, request_id, user_id); pas de secrets/PII en clair.
+- Traçabilité paiements (correlation_id); alertes sur taux d’échecs jobs/paiements via métriques Horizon/logs.
+
+# Qualité & CI
+- Pipelines: composer install (cache), phpstan (level 8), pest (unit/feature), migrations/seeders éphémères; composer audit non-bloquant informatif.
+- Interdits: logique métier dans contrôleurs; queries brutes non-paramétrées; secrets en code; endpoints non documentés.
+
+# Docker local
+- Services: php-fpm, nginx, redis, queue-worker, (horizon optionnel); .env.example cohérent; script de seed/démo; ports non conflictuels.
+

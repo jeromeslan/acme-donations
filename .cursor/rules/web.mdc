@@ -1,0 +1,39 @@
+---
+alwaysApply: true
+globs:
+  - "web/**"
+---
+# Versions & Outils
+- Vue 3.5.x (stable), Vite, TypeScript strict, Pinia, Vue Router, Tailwind CSS 4.1.x; Node 20 LTS.
+- Générer types/clients à partir d’OpenAPI (shared/) pour appels API typés.
+
+# Architecture & Domaines
+- Stores Pinia par domaine: auth, campaigns, donations, admin; composants page + composants UI modulaires.
+- Routage protégé par rôles (employé, créateur, admin), et redirections centralisées pour 401/403/419.
+
+# Écrans & UX
+- Employé: accueil, recherche/filtre, liste/cartes, détail campagne (progression, dons récents), flux don (mock/confirm), historique/recus.
+- Créateur: créer/éditer campagne (métadonnées, objectifs, médias), stats et statut modération.
+- Admin: dashboard KPIs, modération (approuver/rejeter), paramètres, logs/health, rapports.
+
+# Auth SPA (Sanctum cookies)
+- Toujours fetch/axios avec credentials; initialiser CSRF avant login; gérer 401/419 (renouveler session/rediriger vers login).
+- Ne jamais stocker token côté client; préférer cookies HttpOnly/Secure/SameSite.
+
+# Styling & A11Y
+- Tailwind v4 (tokens, container queries, dark mode); design responsive mobile→desktop; composants accessibles (focus visible, ARIA).
+- Éviter CSS “inline style”; privilégier utilitaires et variables CSS globaux pour cohérence.
+
+# Performance
+- Code-splitting par route; cache de données front aligné avec invalidations back; skeletons/shimmers pour endurance perçue.
+- Eviter sur-rendu; mémoïsation sélective; images responsives/avif; budgets de bundle surveillés.
+
+# Tests & Qualité
+- Unit/integ: Vitest + Vue Test Utils (composants, stores); Mocks réseau sur clients OpenAPI.
+- E2E: Playwright couvrant “don happy path”, création/modération campagne, dashboard admin; exécuter sur docker-compose (api+web+redis).
+- Lint & type-check stricts avant build.
+
+# Build & Envs
+- Vite config: alias @, sourcemaps dev uniquement, splitChunks; .env.local exemples; désactiver logs verbeux en prod.
+- Artefacts build publiables en CI; déploiement statique compatible reverse proxy.
+
