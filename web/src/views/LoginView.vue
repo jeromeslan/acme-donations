@@ -1,53 +1,120 @@
 <template>
-  <main class="min-h-screen flex items-center justify-center p-6">
-    <form class="w-full max-w-sm border rounded p-6 space-y-4" @submit.prevent="onSubmit">
-      <h1 class="text-2xl font-bold">Connexion</h1>
-      <div>
-        <label class="block text-sm mb-1">Email</label>
-        <input v-model="email" type="email" required class="w-full border rounded px-3 py-2" />
-      </div>
-      <div>
-        <label class="block text-sm mb-1">Mot de passe</label>
-        <input v-model="password" type="password" required class="w-full border rounded px-3 py-2" />
-      </div>
-      <button type="submit" class="w-full bg-sky-600 text-white rounded px-3 py-2">Se connecter</button>
-      <p v-if="error" class="text-red-600 text-sm">{{ error }}</p>
-    </form>
-  </main>
+  <div class="auth-layout">
+    <div class="auth-card">
+      <BaseCard>
+        <template #header>
+          <div class="text-center">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+            <p class="text-gray-600">Sign in to your ACME Donations account</p>
+          </div>
+        </template>
+
+        <form @submit.prevent="handleSubmit" class="space-y-6">
+          <BaseInput
+            v-model="form.email"
+            label="Email Address"
+            type="email"
+            placeholder="Enter your email"
+            required
+            :error="errors.email"
+          />
+
+          <BaseInput
+            v-model="form.password"
+            label="Password"
+            type="password"
+            placeholder="Enter your password"
+            required
+            :error="errors.password"
+          />
+
+          <BaseAlert v-if="errors.general" variant="error" dismissible>
+            {{ errors.general }}
+          </BaseAlert>
+
+          <BaseButton
+            type="submit"
+            variant="primary"
+            size="lg"
+            :loading="loading"
+            class="w-full"
+          >
+            {{ loading ? 'Signing In...' : 'Sign In' }}
+          </BaseButton>
+        </form>
+
+        <template #footer>
+          <div class="text-center">
+            <p class="text-sm text-gray-600">
+              Demo credentials: <strong>admin@acme.test</strong> / <strong>password</strong>
+            </p>
+          </div>
+        </template>
+      </BaseCard>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useAuthStore } from '@/stores/auth'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseAlert from '@/components/ui/BaseAlert.vue'
 
-const email = ref('')
-const password = ref('')
-const error = ref('')
 const auth = useAuthStore()
 const router = useRouter()
+const loading = ref(false)
 
-async function onSubmit() {
-  error.value = ''
+const form = reactive({
+  email: '',
+  password: ''
+})
+
+const errors = reactive({
+  email: '',
+  password: '',
+  general: ''
+})
+
+const clearErrors = () => {
+  errors.email = ''
+  errors.password = ''
+  errors.general = ''
+}
+
+const handleSubmit = async () => {
+  clearErrors()
+  loading.value = true
+
   try {
-    await auth.login(email.value, password.value)
-    await afterLogin()
-  } catch (e: any) {
-    console.error('Login error:', e)
-    if (e.response?.status === 422) {
-      error.value = 'Format d\'email invalide'
-    } else if (e.response?.status === 401) {
-      error.value = 'Identifiants invalides'
-    } else if (e.response?.status === 419) {
-      error.value = 'Session expirée, veuillez réessayer'
+    await auth.login(form.email, form.password)
+    await navigateAfterLogin()
+  } catch (error: any) {
+    console.error('Login error:', error)
+    
+    if (error.response?.status === 422) {
+      const validationErrors = error.response.data.errors || {}
+      errors.email = validationErrors.email?.[0] || ''
+      errors.password = validationErrors.password?.[0] || ''
+      if (!errors.email && !errors.password) {
+        errors.general = 'Invalid email format'
+      }
+    } else if (error.response?.status === 401) {
+      errors.general = 'Invalid credentials. Please check your email and password.'
+    } else if (error.response?.status === 419) {
+      errors.general = 'Session expired. Please try again.'
     } else {
-      error.value = 'Erreur de connexion'
+      errors.general = 'Connection error. Please try again later.'
     }
+  } finally {
+    loading.value = false
   }
 }
 
-
-async function afterLogin() {
+const navigateAfterLogin = async () => {
   const roles = auth.user?.roles ?? []
   if (roles.includes('admin')) {
     router.replace({ name: 'admin' })
@@ -56,5 +123,3 @@ async function afterLogin() {
   }
 }
 </script>
-
-

@@ -30,8 +30,12 @@ Route::post('/campaigns/{campaign}/donations', [DonationController::class, 'stor
 Route::get('/me/donations', [DonationController::class, 'myDonations'])->middleware('auth:sanctum');
 Route::get('/donations/{donation}/receipt', [DonationController::class, 'receipt'])->middleware('auth:sanctum');
 
-// Admin KPIs
+// Admin routes
 Route::get('/admin/kpis', [AdminController::class, 'kpis'])->middleware('auth:sanctum');
+Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->middleware('auth:sanctum');
+Route::get('/admin/campaigns/pending', [AdminController::class, 'pendingCampaigns'])->middleware('auth:sanctum');
+Route::post('/admin/campaigns/{id}/approve', [AdminController::class, 'approveCampaign'])->middleware('auth:sanctum');
+Route::post('/admin/campaigns/{id}/reject', [AdminController::class, 'rejectCampaign'])->middleware('auth:sanctum');
 
 
 // DEBUG (temporary): counts and sample campaigns

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Donation, Campaign};
+use App\Models\{Donation, Campaign, User};
 use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
@@ -25,6 +25,117 @@ class AdminController extends Controller
             ],
             'top_campaigns' => $topCampaigns,
         ]);
+    }
+
+    public function dashboard()
+    {
+        // Get campaign statistics - use existing status values
+        $totalCampaigns = Campaign::count();
+        $publishedCampaigns = Campaign::where('status', 'active')->count(); // Use 'active' instead of 'published'
+        $pendingCampaigns = Campaign::where('status', 'pending')->count();
+        $draftCampaigns = Campaign::where('status', 'draft')->count();
+        
+        // Get donation statistics
+        $totalDonations = Donation::count();
+        $totalRaised = Donation::sum('amount') ?? 0;
+        
+        // Get user statistics
+        $totalUsers = User::count();
+        
+        // Recent activity (last 10 campaigns)
+        $recentActivity = Campaign::query()
+            ->select('id', 'title', 'status', 'created_at')
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get()
+            ->map(function ($campaign) {
+                return [
+                    'id' => $campaign->id,
+                    'description' => "Campaign '{$campaign->title}' was " . $this->getStatusAction($campaign->status),
+                    'created_at' => $campaign->created_at
+                ];
+            });
+
+        return response()->json([
+            'stats' => [
+                'totalCampaigns' => $totalCampaigns,
+                'publishedCampaigns' => $publishedCampaigns,
+                'pendingCampaigns' => $pendingCampaigns,
+                'draftCampaigns' => $draftCampaigns,
+                'totalDonations' => $totalDonations,
+                'totalRaised' => $totalRaised,
+                'totalUsers' => $totalUsers,
+            ],
+            'recentActivity' => $recentActivity
+        ]);
+    }
+
+    public function approveCampaign($id)
+    {
+        $campaign = Campaign::findOrFail($id);
+        
+        $campaign->update([
+            'status' => 'active', // Use 'active' instead of 'published'
+            'published_at' => now()
+        ]);
+
+        return response()->json([
+            'message' => 'Campaign approved successfully',
+            'campaign' => $campaign
+        ]);
+    }
+
+    public function rejectCampaign($id)
+    {
+        $campaign = Campaign::findOrFail($id);
+        
+        $reason = request('reason', '');
+        
+        $campaign->update([
+            'status' => 'archived' // Use 'archived' instead of 'rejected' for now
+        ]);
+
+        return response()->json([
+            'message' => 'Campaign rejected successfully',
+            'campaign' => $campaign
+        ]);
+    }
+
+    public function pendingCampaigns()
+    {
+        $campaigns = Campaign::with(['category', 'creator'])
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($campaign) {
+                return [
+                    'id' => $campaign->id,
+                    'title' => $campaign->title,
+                    'description' => $campaign->description,
+                    'goal_amount' => $campaign->goal_amount,
+                    'donated_amount' => $campaign->donated_amount,
+                    'status' => $campaign->status,
+                    'featured' => $campaign->featured,
+                    'created_at' => $campaign->created_at,
+                    'category' => $campaign->category ? $campaign->category->name : null,
+                    'creator' => $campaign->creator ? $campaign->creator->name : null,
+                ];
+            });
+
+        return response()->json([
+            'campaigns' => $campaigns
+        ]);
+    }
+
+    private function getStatusAction($status)
+    {
+        return match($status) {
+            'active' => 'published',
+            'pending' => 'submitted for review',
+            'draft' => 'saved as draft',
+            'archived' => 'rejected',
+            default => 'created'
+        };
     }
 }
 

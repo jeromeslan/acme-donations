@@ -33,11 +33,6 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../views/AdminView.vue'),
   },
   {
-    path: '/login-demo',
-    name: 'login-demo',
-    component: () => import('../views/LoginDemoView.vue'),
-  },
-  {
     path: '/creator',
     name: 'creator',
     meta: { roles: ['creator'] },

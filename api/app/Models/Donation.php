@@ -11,14 +11,11 @@ class Donation extends Model
     use HasFactory;
 
     protected $fillable = [
-        'campaign_id', 'user_id', 'amount', 'status', 'payment_reference', 'correlation_id',
-        'message', 'anonymous', 'donation_date'
+        'campaign_id', 'user_id', 'amount', 'status', 'payment_reference', 'correlation_id'
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
-        'anonymous' => 'boolean',
-        'donation_date' => 'datetime',
     ];
 
     public function campaign(): BelongsTo { return $this->belongsTo(Campaign::class); }
