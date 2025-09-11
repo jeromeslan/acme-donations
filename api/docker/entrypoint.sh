@@ -54,12 +54,12 @@ fi
 # Ensure base tables exist
 php artisan migrate --force || true
 
-# Create modules (idempotent) - Auth module removed as it's handled by main app
-for module in Campaign Donation Payment Admin Notification; do
-  if ! php artisan module:list | grep -q "^$module" 2>/dev/null; then
-    php artisan module:make "$module" || true
-  fi
-done
+# Skip module creation - using main app only for now
+# for module in Campaign Donation; do
+#   if ! php artisan module:list | grep -q "^$module" 2>/dev/null; then
+#     php artisan module:make "$module" || true
+#   fi
+# done
 
 exec "$@"
 

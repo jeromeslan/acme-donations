@@ -2,129 +2,55 @@
 
 namespace Modules\Campaign\Http\Controllers;
 
-use App\Models\Campaign;
-use Illuminate\Contracts\Cache\Repository as CacheRepository;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 
-class CampaignController extends \App\Http\Controllers\Controller
+class CampaignController extends Controller
 {
-    public function index(Request $request)
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
     {
-        $cacheKey = 'campaigns:index:' . md5(json_encode($request->query()));
-        $ttl = 60; // seconds
-
-        $user = $request->user();
-        $isAdmin = $user && $user->hasRole('admin');
-
-        $query = Campaign::query()->with('category')
-            ->when($request->filled('q'), function ($query) use ($request) {
-                $value = (string)$request->query('q');
-                return $query->where('title', 'like', "%{$value}%");
-            })
-            ->when($request->filled('status'), function ($query) use ($request) {
-                $value = (string)$request->query('status');
-                return $query->where('status', $value);
-            })
-            ->when($request->filled('category_id'), function ($query) use ($request) {
-                $value = (int)$request->query('category_id');
-                return $query->where('category_id', $value);
-            })
-            ->when(!$isAdmin && !$request->filled('status'), function ($query) {
-                // Les utilisateurs non-admin ne voient que les campagnes publiées par défaut
-                return $query->where('status', 'published');
-            })
-            ->orderByDesc('id');
-
-        // Primary fetch (with optional cache)
-        $fetch = function () use ($request, $query) {
-            return $query->paginate(perPage: (int)$request->integer('per_page', 12));
-        };
-
-        $page = $request->boolean('nocache')
-            ? $fetch()
-            : Cache::store('redis')->tags(['campaigns'])->remember($cacheKey, $ttl, $fetch);
-
-        // Safety fallback: if empty page but campaigns exist, return latest campaigns
-        if ($page->total() === 0 && \App\Models\Campaign::query()->count() > 0) {
-            $fallback = Campaign::query()->with('category')->orderByDesc('id');
-            return $fallback->paginate(perPage: (int)$request->integer('per_page', 12));
-        }
-
-        return $page;
+        return view('campaign::index');
     }
 
-    public function featured(Request $request)
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
     {
-        $user = $request->user();
-        $isAdmin = $user && $user->hasRole('admin');
-
-        return Cache::store('redis')->tags(['campaigns'])->remember('campaigns:featured', 60, function () use ($isAdmin) {
-            $query = Campaign::query()
-                ->where('featured', true)
-                ->where('status', $isAdmin ? 'active' : 'published')
-                ->orderByDesc('id')
-                ->limit(8);
-
-            return $query->get();
-        });
+        return view('campaign::create');
     }
 
-    public function show(Campaign $campaign)
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request) {}
+
+    /**
+     * Show the specified resource.
+     */
+    public function show($id)
     {
-        return Cache::store('redis')->tags(["campaign:{$campaign->id}", 'campaigns'])->remember("campaigns:show:{$campaign->id}", 60, fn() => $campaign->load('category'));
+        return view('campaign::show');
     }
 
-    public function store(Request $request)
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit($id)
     {
-        $data = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'goal_amount' => 'required|numeric|min:1',
-            'category_id' => 'required|exists:categories,id',
-            'featured' => 'boolean',
-            'status' => 'required|in:draft,pending',
-        ]);
-
-        // Vérifier si l'utilisateur est admin pour forcer le statut
-        $user = $request->user();
-        $isAdmin = $user && $user->hasRole('admin');
-
-        // Si ce n'est pas un admin, forcer le statut à pending si demandé
-        if (!$isAdmin && $data['status'] === 'pending') {
-            $data['status'] = 'pending';
-        } elseif (!$isAdmin && $data['status'] === 'draft') {
-            $data['status'] = 'draft';
-        }
-
-        $campaign = Campaign::create($data + [
-            'creator_id' => (int)$user?->id,
-            'donated_amount' => 0,
-        ]);
-
-        Cache::store('redis')->tags(['campaigns'])->flush();
-        return response()->json($campaign, 201);
+        return view('campaign::edit');
     }
 
-    public function update(Request $request, Campaign $campaign)
-    {
-        $data = $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
-            'goal_amount' => 'sometimes|numeric|min:1',
-            'category_id' => 'sometimes|exists:categories,id',
-            'featured' => 'boolean',
-            'status' => 'sometimes|in:draft,pending,active,completed,archived',
-        ]);
-        $campaign->update($data);
-        Cache::store('redis')->tags(["campaign:{$campaign->id}", 'campaigns'])->flush();
-        return response()->json($campaign);
-    }
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id) {}
 
-    public function destroy(Campaign $campaign)
-    {
-        $campaign->delete();
-        Cache::store('redis')->tags(["campaign:{$campaign->id}", 'campaigns'])->flush();
-        return response()->noContent();
-    }
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($id) {}
 }

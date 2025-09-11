@@ -2,22 +2,22 @@
   <div class="create-campaign-view">
     <div class="container">
       <div class="page-header">
-        <h1>Créer une nouvelle campagne</h1>
-        <p>Remplissez les informations de votre campagne solidaire</p>
+        <h1>Create a New Campaign</h1>
+        <p>Fill in the information for your charitable campaign</p>
       </div>
 
       <form @submit.prevent="handleSubmit" class="campaign-form">
         <div class="form-section">
-          <h3>Informations de base</h3>
+          <h3>Basic Information</h3>
 
           <div class="form-group">
-            <label for="title">Titre de la campagne *</label>
+            <label for="title">Campaign Title *</label>
             <input
               id="title"
               v-model="form.title"
               type="text"
               required
-              placeholder="Ex: Aide aux familles en difficulté"
+              placeholder="Ex: Help for families in need"
               :class="{ 'error': errors.title }"
             />
             <span v-if="errors.title" class="error-message">{{ errors.title }}</span>
@@ -30,7 +30,7 @@
               v-model="form.description"
               required
               rows="4"
-              placeholder="Décrivez votre campagne et son objectif..."
+              placeholder="Describe your campaign and its goal..."
               :class="{ 'error': errors.description }"
             ></textarea>
             <span v-if="errors.description" class="error-message">{{ errors.description }}</span>
@@ -38,7 +38,7 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label for="goal_amount">Objectif (€) *</label>
+              <label for="goal_amount">Goal Amount (€) *</label>
               <input
                 id="goal_amount"
                 v-model.number="form.goal_amount"
@@ -53,14 +53,14 @@
             </div>
 
             <div class="form-group">
-              <label for="category_id">Catégorie *</label>
+              <label for="category_id">Category *</label>
               <select
                 id="category_id"
                 v-model="form.category_id"
                 required
                 :class="{ 'error': errors.category_id }"
               >
-                <option value="">Sélectionner une catégorie</option>
+                <option value="">Select a category</option>
                 <option v-for="category in categories" :key="category.id" :value="category.id">
                   {{ category.name }}
                 </option>
@@ -71,7 +71,7 @@
         </div>
 
         <div class="form-section">
-          <h3>Paramètres optionnels</h3>
+          <h3>Optional Settings</h3>
 
           <div class="form-group">
             <label class="checkbox-label">
@@ -80,17 +80,26 @@
                 type="checkbox"
               />
               <span class="checkmark"></span>
-              Demander à être mis en avant (campagne featured)
+              Request to be featured (featured campaign)
             </label>
-            <small class="form-help">Les campagnes featured sont mises en avant sur la page d'accueil</small>
+            <small class="form-help">Featured campaigns are highlighted on the homepage</small>
           </div>
         </div>
 
-        <!-- Affichage des erreurs -->
+        <!-- Success Message -->
+        <div v-if="showSuccess" class="success-message">
+          <div class="success-header">
+            <i class="fas fa-check-circle"></i>
+            Success!
+          </div>
+          <p class="success-text">{{ successMessage }}</p>
+        </div>
+
+        <!-- Error Display -->
         <div v-if="Object.keys(errors).length > 0" class="error-summary">
           <div class="error-header">
             <i class="fas fa-exclamation-triangle"></i>
-            Erreurs de validation :
+            Validation Errors:
           </div>
           <ul class="error-list">
             <li v-for="(error, field) in errors" :key="field">
@@ -107,7 +116,7 @@
             :disabled="loading"
           >
             <i class="fas fa-save"></i>
-            Sauvegarder comme brouillon
+            Save as Draft
           </button>
 
           <button
@@ -117,7 +126,7 @@
             :disabled="loading"
           >
             <i class="fas fa-stethoscope"></i>
-            Diagnostiquer CSRF
+            Diagnose CSRF
           </button>
 
           <button
@@ -126,7 +135,7 @@
             :disabled="loading"
           >
             <i class="fas fa-paper-plane"></i>
-            Publier la campagne
+            Publish Campaign
           </button>
         </div>
       </form>
@@ -145,6 +154,8 @@ const auth = useAuthStore()
 
 const loading = ref(false)
 const categories = ref([])
+const successMessage = ref('')
+const showSuccess = ref(false)
 
 const form = ref({
   title: '',
@@ -185,28 +196,45 @@ const submitCampaign = async (status: 'draft' | 'pending') => {
 
     console.log('Campaign created successfully:', response.data)
 
-    router.push({
-      name: 'campaign-detail',
-      params: { id: response.data.id }
-    })
+    // Afficher le message de succès selon le statut
+    if (status === 'draft') {
+      successMessage.value = 'Campaign saved as draft successfully! You can continue editing or publish it later.'
+    } else {
+      successMessage.value = 'Campaign submitted for publication! It will be reviewed by administrators before going live.'
+    }
+
+    showSuccess.value = true
+
+    // Réinitialiser le formulaire après 3 secondes
+    setTimeout(() => {
+      form.value = {
+        title: '',
+        description: '',
+        goal_amount: 0,
+        category_id: '',
+        featured: false
+      }
+      successMessage.value = ''
+      showSuccess.value = false
+    }, 3000)
 
   } catch (error: any) {
-    console.error('Erreur lors de la création:', error)
+    console.error('Error creating campaign:', error)
 
     if (error.response?.status === 422) {
       errors.value = error.response.data.errors || {}
       console.log('Validation errors:', errors.value)
     } else if (error.response?.status === 419) {
-      errors.value.general = 'Erreur de sécurité (CSRF). Veuillez rafraîchir la page.'
+      errors.value.general = 'Security error (CSRF). Please refresh the page.'
       console.error('CSRF token mismatch - diagnostic:')
       // Diagnostic CSRF
       console.log('Current cookies:', document.cookie)
       const xsrfToken = document.cookie.split('; ').find(row => row.startsWith('XSRF-TOKEN='))
       console.log('XSRF token found:', !!xsrfToken)
     } else if (error.response?.status === 401) {
-      errors.value.general = 'Vous devez être connecté pour créer une campagne.'
+      errors.value.general = 'You must be logged in to create a campaign.'
     } else {
-      errors.value.general = `Erreur: ${error.response?.data?.message || error.message || 'Une erreur inconnue est survenue'}`
+      errors.value.general = `Error: ${error.response?.data?.message || error.message || 'An unknown error occurred'}`
     }
   } finally {
     loading.value = false
@@ -422,6 +450,31 @@ onMounted(() => {
   border-color: #9ca3af;
 }
 
+/* Success Message */
+.success-message {
+  background: #ecfdf5;
+  border: 1px solid #d1fae5;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+.success-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #059669;
+  margin-bottom: 0.5rem;
+}
+
+.success-text {
+  color: #065f46;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
 /* Error Summary */
 .error-summary {
   background: #fef2f2;
@@ -471,3 +524,4 @@ onMounted(() => {
   }
 }
 </style>
+

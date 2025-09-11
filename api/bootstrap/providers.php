@@ -26,5 +26,5 @@ return [
     Illuminate\View\ViewServiceProvider::class,
     Laravel\Sanctum\SanctumServiceProvider::class,
     Spatie\Permission\PermissionServiceProvider::class,
-    App\Providers\ModuleServiceProvider::class,
+    // App\Providers\ModuleServiceProvider::class, // Disabled for now
 ];

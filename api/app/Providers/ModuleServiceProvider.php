@@ -31,9 +31,6 @@ class ModuleServiceProvider extends ServiceProvider
         $modules = [
             'Campaign' => 'Modules\Campaign\routes\api.php',
             'Donation' => 'Modules\Donation\routes\api.php',
-            'Admin' => 'Modules\Admin\routes\api.php',
-            'Notification' => 'Modules\Notification\routes\api.php',
-            'Payment' => 'Modules\Payment\routes\api.php',
         ];
 
         foreach ($modules as $module => $routeFile) {
