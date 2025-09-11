@@ -5,28 +5,104 @@ node_modules/
 web/node_modules/
 web/.vite/
 
+# Frontend Build Artifacts
+web/dist/
+web/build/
+web/coverage/
+web/reports/
+web/storybook-static/
+
+# Vite
+.vite/
+vite.config.ts.timestamp-*
+
 # PHP/Laravel
 vendor/
 api/vendor/
 api/storage/*.key
 api/storage/app/
-api/storage/framework/
+api/storage/framework/cache/
+api/storage/framework/sessions/
+api/storage/framework/views/
 api/storage/logs/
+api/bootstrap/cache/*.php
 api/.env
+api/.env.backup
+api/.env.local
+
+# Composer
+composer.lock
 
 # OS/Editor
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
+*~
 .idea/
 .vscode/
+*.sublime-project
+*.sublime-workspace
 
 # Docker
 .env.docker.local
 .docker/
+docker-compose.override.yml
+
+# Logs
+*.log
+logs/
+web/logs/
+api/logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+.nyc_output/
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
 
 # Generated
 shared/types/
 coverage/
 reports/
+*.tsbuildinfo
+
+# Temporary files
+.tmp/
+temp/
+.tmp/
+*.tmp
+
+# Build artifacts
+build/
+dist/
+out/
+
+# Deployment
+.deploy/
+deploy/
+deployment/
 
 

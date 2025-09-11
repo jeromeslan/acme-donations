@@ -155,3 +155,21 @@ docker-compose --profile dev ps
 # 4. Vérifier les logs pour s'assurer que tout fonctionne
 docker-compose --profile dev logs web | tail -10
 docker-compose --profile dev logs api | tail -10
+
+
+# 1. Supprimé le module Auth cassé
+docker-compose exec api-php rm -rf Modules/Auth
+
+# 2. Vidé tous les caches Laravel
+docker-compose exec php artisan config:clear
+docker-compose exec php artisan cache:clear  
+docker-compose exec php artisan route:clear
+docker-compose exec php artisan view:clear
+
+# 3. Testé l'API - ✅ FONCTIONNE !s
+
+
+onnectez-vous avec l'utilisateur test : user@example.com / password
+Allez sur la page d'accueil : Vous verrez le bouton "Créer une campagne"
+Créez une campagne : Remplissez le formulaire et cliquez sur "Publier"
+Connectez-vous en admin : admin@acme.test / password

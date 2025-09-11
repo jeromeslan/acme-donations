@@ -13,6 +13,10 @@ class CampaignController extends \App\Http\Controllers\Controller
     {
         $cacheKey = 'campaigns:index:' . md5(json_encode($request->query()));
         $ttl = 60; // seconds
+
+        $user = $request->user();
+        $isAdmin = $user && $user->hasRole('admin');
+
         $query = Campaign::query()->with('category')
             ->when($request->filled('q'), function ($query) use ($request) {
                 $value = (string)$request->query('q');
@@ -25,6 +29,10 @@ class CampaignController extends \App\Http\Controllers\Controller
             ->when($request->filled('category_id'), function ($query) use ($request) {
                 $value = (int)$request->query('category_id');
                 return $query->where('category_id', $value);
+            })
+            ->when(!$isAdmin && !$request->filled('status'), function ($query) {
+                // Les utilisateurs non-admin ne voient que les campagnes publiées par défaut
+                return $query->where('status', 'published');
             })
             ->orderByDesc('id');
 
@@ -46,11 +54,20 @@ class CampaignController extends \App\Http\Controllers\Controller
         return $page;
     }
 
-    public function featured()
+    public function featured(Request $request)
     {
-        return Cache::store('redis')->tags(['campaigns'])->remember('campaigns:featured', 60, fn() => Campaign::query()
-            ->where('featured', true)->where('status', 'active')
-            ->orderByDesc('id')->limit(8)->get());
+        $user = $request->user();
+        $isAdmin = $user && $user->hasRole('admin');
+
+        return Cache::store('redis')->tags(['campaigns'])->remember('campaigns:featured', 60, function () use ($isAdmin) {
+            $query = Campaign::query()
+                ->where('featured', true)
+                ->where('status', $isAdmin ? 'active' : 'published')
+                ->orderByDesc('id')
+                ->limit(8);
+
+            return $query->get();
+        });
     }
 
     public function show(Campaign $campaign)
@@ -66,12 +83,25 @@ class CampaignController extends \App\Http\Controllers\Controller
             'goal_amount' => 'required|numeric|min:1',
             'category_id' => 'required|exists:categories,id',
             'featured' => 'boolean',
+            'status' => 'required|in:draft,pending',
         ]);
+
+        // Vérifier si l'utilisateur est admin pour forcer le statut
+        $user = $request->user();
+        $isAdmin = $user && $user->hasRole('admin');
+
+        // Si ce n'est pas un admin, forcer le statut à pending si demandé
+        if (!$isAdmin && $data['status'] === 'pending') {
+            $data['status'] = 'pending';
+        } elseif (!$isAdmin && $data['status'] === 'draft') {
+            $data['status'] = 'draft';
+        }
+
         $campaign = Campaign::create($data + [
-            'creator_id' => (int)$request->user()?->id,
-            'status' => 'pending',
+            'creator_id' => (int)$user?->id,
             'donated_amount' => 0,
         ]);
+
         Cache::store('redis')->tags(['campaigns'])->flush();
         return response()->json($campaign, 201);
     }

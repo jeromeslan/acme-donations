@@ -29,7 +29,6 @@ class ModuleServiceProvider extends ServiceProvider
     protected function loadModuleRoutes(): void
     {
         $modules = [
-            'Auth' => 'Modules\Auth\routes\api.php',
             'Campaign' => 'Modules\Campaign\routes\api.php',
             'Donation' => 'Modules\Donation\routes\api.php',
             'Admin' => 'Modules\Admin\routes\api.php',
@@ -40,8 +39,7 @@ class ModuleServiceProvider extends ServiceProvider
         foreach ($modules as $module => $routeFile) {
             $path = base_path($routeFile);
             if (file_exists($path)) {
-                Route::prefix('api')
-                    ->middleware('api')
+                Route::middleware('api')
                     ->group($path);
             }
         }

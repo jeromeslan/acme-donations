@@ -15,8 +15,9 @@ class AdminController extends \App\Http\Controllers\Controller
         return [
             'stats' => [
                 'total_campaigns' => Campaign::count(),
-                'active_campaigns' => Campaign::where('status', 'active')->count(),
+                'published_campaigns' => Campaign::where('status', 'published')->count(),
                 'pending_campaigns' => Campaign::where('status', 'pending')->count(),
+                'draft_campaigns' => Campaign::where('status', 'draft')->count(),
                 'total_donations' => Donation::count(),
                 'total_raised' => Donation::where('status', 'completed')->sum('amount'),
                 'total_users' => User::count(),
@@ -36,9 +37,12 @@ class AdminController extends \App\Http\Controllers\Controller
 
     public function approveCampaign(Request $request, Campaign $campaign)
     {
-        $campaign->update(['status' => 'active']);
+        $campaign->update([
+            'status' => 'published',
+            'published_at' => now()
+        ]);
         Cache::store('redis')->tags(['campaigns'])->flush();
-        return response()->json(['message' => 'Campaign approved']);
+        return response()->json(['message' => 'Campaign approved and published']);
     }
 
     public function rejectCampaign(Request $request, Campaign $campaign)

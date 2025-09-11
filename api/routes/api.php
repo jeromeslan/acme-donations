@@ -10,6 +10,13 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // NOTE: login/logout/me are mounted under web middleware in routes/web.php to ensure session is present
 
+// Categories
+Route::get('/categories', [App\Http\Controllers\CategoryController::class, 'index']);
+Route::get('/categories/{category}', [App\Http\Controllers\CategoryController::class, 'show']);
+Route::post('/categories', [App\Http\Controllers\CategoryController::class, 'store'])->middleware('auth:sanctum');
+Route::put('/categories/{category}', [App\Http\Controllers\CategoryController::class, 'update'])->middleware('auth:sanctum');
+Route::delete('/categories/{category}', [App\Http\Controllers\CategoryController::class, 'destroy'])->middleware('auth:sanctum');
+
 // Campaigns
 Route::get('/campaigns', [CampaignController::class, 'index']);
 Route::get('/campaigns/featured', [CampaignController::class, 'featured']);

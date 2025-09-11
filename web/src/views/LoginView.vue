@@ -63,7 +63,7 @@ async function afterLogin() {
   if (roles.includes('admin')) {
     router.replace({ name: 'admin' })
   } else {
-    router.replace({ name: 'campaigns' })
+    router.replace({ name: 'home' })
   }
 }
 </script>
