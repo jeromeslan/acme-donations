@@ -138,3 +138,20 @@ Les services doivent déjà être up (via .\scripts\dev.ps1 ou docker compose up
 
 docker compose up -d --build
 .\scripts\build.ps1
+
+
+
+
+# 1. Nettoyer complètement les containers et volumes
+docker-compose down --volumes --remove-orphans
+docker system prune -f
+
+# 2. Rebuild et relancer tous les services
+docker-compose --profile dev up --build -d
+
+# 3. Vérifier que tous les services sont démarrés
+docker-compose --profile dev ps
+
+# 4. Vérifier les logs pour s'assurer que tout fonctionne
+docker-compose --profile dev logs web | tail -10
+docker-compose --profile dev logs api | tail -10
