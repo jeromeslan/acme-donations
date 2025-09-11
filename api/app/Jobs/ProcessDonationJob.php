@@ -50,7 +50,19 @@ class ProcessDonationJob implements ShouldQueue
 
             // Update campaign donated amount
             $campaign = $donation->campaign;
+            $oldAmount = $campaign->donated_amount;
             $campaign->increment('donated_amount', $donation->amount);
+            
+            // Refresh the campaign instance to get updated values
+            $campaign->refresh();
+            $newAmount = $campaign->donated_amount;
+            
+            Log::info('Campaign amount updated', [
+                'campaign_id' => $campaign->id,
+                'old_amount' => $oldAmount,
+                'donation_amount' => $donation->amount,
+                'new_amount' => $newAmount
+            ]);
 
             // Clear cache
             Cache::store('redis')->tags(['campaigns', "campaign:{$campaign->id}"])->flush();

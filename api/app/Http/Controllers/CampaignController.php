@@ -56,7 +56,7 @@ class CampaignController extends Controller
 
     public function show(Campaign $campaign)
     {
-        return Cache::store('redis')->tags(["campaign:{$campaign->id}", 'campaigns'])->remember("campaigns:show:{$campaign->id}", 60, fn() => $campaign->load('category'));
+        return Cache::store('redis')->tags(["campaign:{$campaign->id}", 'campaigns'])->remember("campaigns:show:{$campaign->id}", 60, fn() => $campaign->load('category')->loadCount('donations'));
     }
 
     public function store(Request $request)

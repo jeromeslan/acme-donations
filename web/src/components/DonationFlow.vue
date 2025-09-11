@@ -254,11 +254,14 @@ const proceedToPayment = async () => {
     })
 
     // Wait for processing to complete (simulate async job)
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    processingMessage.value = 'Finalizing transaction...'
+    await new Promise(resolve => setTimeout(resolve, 3000))
 
     // Fetch updated campaign data
     const updatedResponse = await api.get(`/api/campaigns/${props.campaign.id}`)
     updatedCampaign.value = updatedResponse.data
+    
+    console.log('Updated campaign data:', updatedCampaign.value)
 
     currentStep.value = 'success'
     emit('donation-success', updatedCampaign.value)
