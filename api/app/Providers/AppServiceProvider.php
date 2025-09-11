@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Encryption\Encrypter;
+use App\Contracts\PaymentGateway;
+use App\Services\MockPaymentGateway;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -17,6 +19,11 @@ class AppServiceProvider extends ServiceProvider
         $correctKey = base64_decode(str_replace('base64:', '', $encodedKey));
         $this->app->singleton('encrypter', function () use ($correctKey) {
             return new Encrypter($correctKey, config('app.cipher', 'AES-256-CBC'));
+        });
+
+        // Register Payment Gateway
+        $this->app->singleton(PaymentGateway::class, function ($app) {
+            return new MockPaymentGateway();
         });
     }
 

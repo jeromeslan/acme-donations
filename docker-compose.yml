@@ -29,7 +29,7 @@ services:
       - SESSION_SECURE_COOKIE=false
       - SESSION_SAME_SITE=lax
       - SESSION_DOMAIN=
-      - APP_KEY=base64:your-app-key-here
+      - APP_KEY=base64:YJgmtLJEpaemj5Z8QuK0OxXQ4bwzakaq5dqganLW8BM=
       - APP_NAME=ACME Donations
       - APP_URL=http://localhost:8080
       - REDIS_HOST=redis
