@@ -27,12 +27,12 @@
       <div class="campaign-stats">
         <div class="flex justify-between items-center">
           <div>
-            <div class="text-lg font-semibold text-gray-900">{{ formatCurrency(Number(campaign.donated_amount) || 0) }}</div>
-            <div class="text-sm text-gray-600">raised of {{ formatCurrency(Number(campaign.goal_amount)) }}</div>
+            <div class="text-lg font-semibold text-gray-900">{{ formatCurrency(Number(campaignData.donated_amount) || 0) }}</div>
+            <div class="text-sm text-gray-600">raised of {{ formatCurrency(Number(campaignData.goal_amount)) }}</div>
           </div>
           <div class="text-right">
-            <div class="text-lg font-semibold text-primary-600">{{ campaign.donations_count || 0 }}</div>
-            <div class="text-sm text-gray-600">donor{{ (campaign.donations_count || 0) === 1 ? '' : 's' }}</div>
+            <div class="text-lg font-semibold text-primary-600">{{ campaignData.donations_count || 0 }}</div>
+            <div class="text-sm text-gray-600">donor{{ (campaignData.donations_count || 0) === 1 ? '' : 's' }}</div>
           </div>
         </div>
       </div>
@@ -116,9 +116,33 @@
           <BaseButton @click="closeModal" variant="secondary" size="sm">
             Close
           </BaseButton>
-          <BaseButton variant="primary" size="sm">
+          <BaseButton @click="startDonation" variant="primary" size="sm">
             Donate Now
           </BaseButton>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+
+  <!-- Donation Flow Modal -->
+  <Teleport to="body">
+    <div v-if="showDonationModal" class="modal-overlay" @click="closeDonationModal">
+      <div class="donation-modal-content" @click.stop>
+        <div class="donation-modal-header">
+          <h2 class="donation-modal-title">Make a Donation</h2>
+          <button @click="closeDonationModal" class="modal-close-btn" aria-label="Close">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="donation-modal-body">
+          <DonationFlow 
+            :campaign="campaignData" 
+            @close="closeDonationModal"
+            @donation-success="handleDonationSuccess"
+          />
         </div>
       </div>
     </div>
@@ -128,26 +152,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
-
-const showModal = ref(false)
-
-const closeModal = () => {
-  showModal.value = false
-}
-
-const handleEscapeKey = (event: KeyboardEvent) => {
-  if (event.key === 'Escape' && showModal.value) {
-    closeModal()
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('keydown', handleEscapeKey)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('keydown', handleEscapeKey)
-})
+import DonationFlow from '@/components/DonationFlow.vue'
 
 interface Campaign {
   id: number
@@ -169,10 +174,53 @@ interface Props {
 
 const props = defineProps<Props>()
 
+const showModal = ref(false)
+const showDonationModal = ref(false)
+const campaignData = ref<Campaign>(props.campaign)
+
+const closeModal = () => {
+  showModal.value = false
+}
+
+const closeDonationModal = () => {
+  showDonationModal.value = false
+}
+
+const startDonation = () => {
+  showModal.value = false // Close campaign details modal
+  showDonationModal.value = true // Open donation modal
+}
+
+const handleDonationSuccess = (updatedCampaign: Campaign) => {
+  // Update the local campaign data with the new amounts
+  campaignData.value = updatedCampaign
+  // Close the donation modal
+  showDonationModal.value = false
+  // The campaign cards will automatically update due to reactivity
+}
+
+const handleEscapeKey = (event: KeyboardEvent) => {
+  if (event.key === 'Escape') {
+    if (showDonationModal.value) {
+      closeDonationModal()
+    } else if (showModal.value) {
+      closeModal()
+    }
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', handleEscapeKey)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleEscapeKey)
+})
+
 const progressPercentage = computed(() => {
-  const goalAmount = Number(props.campaign.goal_amount) || 0
+  const goalAmount = Number(campaignData.value.goal_amount) || 0
   if (!goalAmount || goalAmount === 0) return 0
-  const raised = Number(props.campaign.donated_amount) || 0
+  const raised = Number(campaignData.value.donated_amount) || 0
   return Math.min(Math.round((raised / goalAmount) * 100), 100)
 })
 
@@ -387,6 +435,52 @@ const formatCurrency = (amount: number) => {
   
   .modal-title {
     font-size: 1.25rem;
+  }
+}
+
+/* Donation Modal Styles */
+.donation-modal-content {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  max-width: 32rem;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.donation-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 1.5rem 0 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 0;
+  padding-bottom: 1rem;
+}
+
+.donation-modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.donation-modal-body {
+  padding: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .donation-modal-content {
+    margin: 0.5rem;
+    max-height: 95vh;
+  }
+  
+  .donation-modal-header,
+  .donation-modal-body {
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 }
 </style>

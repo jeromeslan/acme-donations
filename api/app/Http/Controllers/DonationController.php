@@ -21,7 +21,8 @@ class DonationController extends Controller
             'status' => 'processing',
             'correlation_id' => $correlationId,
         ]);
-        Bus::dispatch(new \App\Jobs\ProcessDonationJob($donation->id))->onQueue('donations');
+        $job = new \App\Jobs\ProcessDonationJob($donation->id);
+        Bus::dispatch($job->onQueue('donations'));
         return response()->json(['id' => $donation->id, 'correlation_id' => $correlationId], 202);
     }
 

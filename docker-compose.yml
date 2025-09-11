@@ -60,10 +60,30 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - LOG_CHANNEL=stderr
+      - CACHE_STORE=redis
+      - CACHE_DRIVER=redis
+      - SESSION_DRIVER=redis
+      - QUEUE_CONNECTION=database
+      - DB_CONNECTION=sqlite
+      - SANCTUM_STATEFUL_DOMAINS=localhost:5173,localhost,127.0.0.1,web,host.docker.internal
+      - SESSION_SECURE_COOKIE=false
+      - SESSION_SAME_SITE=lax
+      - SESSION_DOMAIN=
+      - APP_KEY=base64:YJgmtLJEpaemj5Z8QuK0OxXQ4bwzakaq5dqganLW8BM=
+      - APP_NAME=ACME Donations
+      - APP_URL=http://localhost:8080
+      - REDIS_HOST=redis
+      - COMPOSER_CACHE_DIR=/tmp/composer-cache
     depends_on:
-      - api-php
+      redis:
+        condition: service_healthy
     command: ["sh", "-lc", "php artisan queue:work --queue=default,donations,notifications,cache --tries=3 --backoff=5"]
     volumes:
+      - ./api:/var/www/html
       - api_storage:/var/www/html/storage
       - api_vendor:/var/www/html/vendor
       - composer_cache:/tmp/composer-cache
