@@ -60,35 +60,37 @@
   </BaseCard>
 
   <!-- Reject Modal -->
-  <div v-if="showRejectModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="closeRejectModal">
-    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4" @click.stop>
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">Reject Campaign</h3>
-      <p class="text-gray-600 mb-4">Please provide a reason for rejecting this campaign:</p>
-      
-      <textarea
-        v-model="rejectReason"
-        placeholder="Enter rejection reason..."
-        class="form-textarea mb-4"
-        rows="3"
-      ></textarea>
+  <Teleport to="body">
+    <div v-if="showRejectModal" class="modal-overlay" @click="closeRejectModal">
+      <div class="modal-content" @click.stop>
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Reject Campaign</h3>
+        <p class="text-gray-600 mb-4">Please provide a reason for rejecting this campaign:</p>
+        
+        <textarea
+          v-model="rejectReason"
+          placeholder="Enter rejection reason..."
+          class="modal-textarea"
+          rows="3"
+        ></textarea>
 
-      <div class="flex items-center gap-3">
-        <BaseButton
-          variant="danger"
-          @click="handleReject"
-          :loading="loading"
-        >
-          Reject Campaign
-        </BaseButton>
-        <BaseButton
-          variant="secondary"
-          @click="closeRejectModal"
-        >
-          Cancel
-        </BaseButton>
+        <div class="modal-buttons">
+          <BaseButton
+            variant="danger"
+            @click="handleReject"
+            :loading="loading"
+          >
+            Reject Campaign
+          </BaseButton>
+          <BaseButton
+            variant="secondary"
+            @click="closeRejectModal"
+          >
+            Cancel
+          </BaseButton>
+        </div>
       </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -195,6 +197,65 @@ const handleReject = () => {
   background-color: #ea580c !important; /* Orange-600 */
   border-color: #ea580c !important;
   transform: translateY(0);
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  max-width: 28rem;
+  width: 100%;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.modal-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 0.875rem;
+}
+
+.modal-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.modal-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 </style>
 
