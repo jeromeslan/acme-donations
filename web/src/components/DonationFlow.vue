@@ -280,11 +280,7 @@ const proceedToPayment = async () => {
     const updatedResponse = await api.get(`/api/campaigns/${props.campaign.id}`)
     updatedCampaign.value = updatedResponse.data
     
-    console.log('Updated campaign data:', updatedCampaign.value)
-    console.log('Setting currentStep to success')
-
     currentStep.value = 'success'
-    console.log('currentStep is now:', currentStep.value)
     emit('donation-success', updatedCampaign.value)
 
   } catch (error: any) {

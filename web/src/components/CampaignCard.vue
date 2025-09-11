@@ -194,8 +194,8 @@ const startDonation = () => {
 const handleDonationSuccess = (updatedCampaign: Campaign) => {
   // Update the local campaign data with the new amounts
   campaignData.value = updatedCampaign
-  // Close the donation modal
-  showDonationModal.value = false
+  // Don't close the modal automatically - let the user see the thank you message
+  // The modal will be closed when the user clicks "Close" or "View Updated Campaign"
   // The campaign cards will automatically update due to reactivity
 }
 
