@@ -20,56 +20,58 @@ class ProcessDonationJob implements ShouldQueue
     public $tries = 3;
     public $backoff = [10, 30, 60];
 
-    protected Donation $donation;
+    protected int $donationId;
 
-    public function __construct(Donation $donation)
+    public function __construct(int $donationId)
     {
-        $this->donation = $donation;
+        $this->donationId = $donationId;
     }
 
     public function handle(PaymentGateway $paymentGateway): void
     {
+        $donation = Donation::findOrFail($this->donationId);
+        
         try {
-            Log::info('Processing donation', ['donation_id' => $this->donation->id]);
+            Log::info('Processing donation', ['donation_id' => $donation->id]);
 
             // Process payment
             $paymentResult = $paymentGateway->processPayment([
-                'donation_id' => $this->donation->id,
-                'amount' => $this->donation->amount,
+                'donation_id' => $donation->id,
+                'amount' => $donation->amount,
                 'payment_method' => 'mock',
             ]);
 
             // Update donation status
-            $this->donation->update([
+            $donation->update([
                 'status' => 'completed',
                 'transaction_id' => $paymentResult['transaction_id'],
                 'processed_at' => now(),
             ]);
 
             // Update campaign donated amount
-            $campaign = $this->donation->campaign;
-            $campaign->increment('donated_amount', $this->donation->amount);
+            $campaign = $donation->campaign;
+            $campaign->increment('donated_amount', $donation->amount);
 
             // Clear cache
             Cache::store('redis')->tags(['campaigns', "campaign:{$campaign->id}"])->flush();
 
             // Send notification to donor
-            $this->donation->donor->notify(new \App\Notifications\DonationProcessed($this->donation));
+            $donation->donor->notify(new \App\Notifications\DonationProcessed($donation));
 
             // Send notification to campaign creator if donation is significant
-            if ($this->donation->amount >= 50) {
-                $campaign->creator->notify(new \App\Notifications\NewDonation($this->donation));
+            if ($donation->amount >= 50) {
+                $campaign->creator->notify(new \App\Notifications\NewDonation($donation));
             }
 
-            Log::info('Donation processed successfully', ['donation_id' => $this->donation->id]);
+            Log::info('Donation processed successfully', ['donation_id' => $donation->id]);
 
         } catch (\Exception $e) {
             Log::error('Failed to process donation', [
-                'donation_id' => $this->donation->id,
+                'donation_id' => $donation->id,
                 'error' => $e->getMessage()
             ]);
 
-            $this->donation->update([
+            $donation->update([
                 'status' => 'failed',
                 'error_message' => $e->getMessage(),
             ]);
@@ -81,7 +83,7 @@ class ProcessDonationJob implements ShouldQueue
     public function failed(\Throwable $exception): void
     {
         Log::error('Donation processing failed permanently', [
-            'donation_id' => $this->donation->id,
+            'donation_id' => $this->donationId,
             'error' => $exception->getMessage()
         ]);
 

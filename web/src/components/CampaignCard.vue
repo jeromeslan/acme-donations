@@ -27,7 +27,7 @@
       <div class="campaign-stats">
         <div class="flex justify-between items-center">
           <div>
-            <div class="text-lg font-semibold text-gray-900">{{ formatCurrency(campaign.raised_amount || 0) }}</div>
+            <div class="text-lg font-semibold text-gray-900">{{ formatCurrency(campaign.donated_amount || 0) }}</div>
             <div class="text-sm text-gray-600">raised of {{ formatCurrency(campaign.goal_amount) }}</div>
           </div>
           <div class="text-right">
@@ -67,7 +67,7 @@ interface Campaign {
   title: string
   description: string
   goal_amount: number
-  raised_amount?: number
+  donated_amount?: number
   donations_count?: number
   status: string
   featured: boolean
@@ -84,7 +84,7 @@ const props = defineProps<Props>()
 
 const progressPercentage = computed(() => {
   if (!props.campaign.goal_amount || props.campaign.goal_amount === 0) return 0
-  const raised = props.campaign.raised_amount || 0
+  const raised = props.campaign.donated_amount || 0
   return Math.min(Math.round((raised / props.campaign.goal_amount) * 100), 100)
 })
 
