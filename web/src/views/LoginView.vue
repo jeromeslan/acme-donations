@@ -11,7 +11,6 @@
         <input v-model="password" type="password" required class="w-full border rounded px-3 py-2" />
       </div>
       <button type="submit" class="w-full bg-sky-600 text-white rounded px-3 py-2">Se connecter</button>
-      <button type="button" class="w-full border rounded px-3 py-2" @click="quickLogin">Login demo</button>
       <p v-if="error" class="text-red-600 text-sm">{{ error }}</p>
     </form>
   </main>
@@ -47,16 +46,6 @@ async function onSubmit() {
   }
 }
 
-async function quickLogin() {
-  error.value = ''
-  try {
-    await auth.login('admin@acme.test', 'password')
-    await afterLogin()
-  } catch (e: any) {
-    console.error('Quick login error:', e)
-    error.value = 'Login demo indisponible'
-  }
-}
 
 async function afterLogin() {
   const roles = auth.user?.roles ?? []

@@ -1,7 +1,11 @@
 openapi: 3.0.3
 info:
   title: ACME Donations API
-  version: 0.1.0
+  description: API-first platform for charitable donation campaigns
+  version: 1.0.0
+  contact:
+    name: ACME Donations Team
+    email: dev@acme-donations.com
 servers:
   - url: http://localhost:8080
 paths:

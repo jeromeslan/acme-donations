@@ -1,3 +1,7 @@
 {
-    "Campaign": true
+    "Campaign": true,
+    "Donation": true,
+    "Admin": true,
+    "Payment": true,
+    "Notification": true
 }

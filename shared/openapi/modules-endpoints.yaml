@@ -1,0 +1,217 @@
+# Module-based endpoints for ACME Donations API
+# These endpoints are provided by the Laravel modules system
+
+paths:
+  # Campaign Module (v1)
+  /api/v1/campaigns:
+    get:
+      summary: List campaigns (Module)
+      tags: [Campaign Module]
+      security:
+        - sanctum: []
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [draft, pending, published, rejected] }
+        - in: query
+          name: category_id
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Unauthorized
+    post:
+      summary: Create campaign (Module)
+      tags: [Campaign Module]
+      security:
+        - sanctum: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, description, goal_amount, category_id]
+              properties:
+                title: { type: string, minLength: 3, maxLength: 255 }
+                description: { type: string, minLength: 10 }
+                goal_amount: { type: number, minimum: 1 }
+                category_id: { type: integer }
+                featured: { type: boolean, default: false }
+                status: { type: string, enum: [draft, pending], default: draft }
+      responses:
+        '201':
+          description: Campaign created
+        '422':
+          description: Validation errors
+        '401':
+          description: Unauthorized
+
+  /api/v1/campaigns/{id}:
+    get:
+      summary: Show campaign (Module)
+      tags: [Campaign Module]
+      security:
+        - sanctum: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Campaign details
+        '404':
+          description: Campaign not found
+        '401':
+          description: Unauthorized
+
+  # Donation Module (v1)
+  /api/v1/donations:
+    get:
+      summary: List donations (Module)
+      tags: [Donation Module]
+      security:
+        - sanctum: []
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Unauthorized
+    post:
+      summary: Create donation (Module)
+      tags: [Donation Module]
+      security:
+        - sanctum: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [campaign_id, amount]
+              properties:
+                campaign_id: { type: integer }
+                amount: { type: number, minimum: 1 }
+                anonymous: { type: boolean, default: false }
+                message: { type: string, maxLength: 500 }
+      responses:
+        '201':
+          description: Donation created
+        '422':
+          description: Validation errors
+        '401':
+          description: Unauthorized
+
+  # Admin Module (v1)
+  /api/v1/admins:
+    get:
+      summary: Admin dashboard (Module)
+      tags: [Admin Module]
+      security:
+        - sanctum: []
+      responses:
+        '200':
+          description: Admin dashboard data
+        '403':
+          description: Admin access required
+        '401':
+          description: Unauthorized
+
+  /api/v1/admins/campaigns/approve/{id}:
+    post:
+      summary: Approve campaign (Module)
+      tags: [Admin Module]
+      security:
+        - sanctum: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Campaign approved
+        '404':
+          description: Campaign not found
+        '403':
+          description: Admin access required
+        '401':
+          description: Unauthorized
+
+  /api/v1/admins/campaigns/reject/{id}:
+    post:
+      summary: Reject campaign (Module)
+      tags: [Admin Module]
+      security:
+        - sanctum: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string, maxLength: 1000 }
+      responses:
+        '200':
+          description: Campaign rejected
+        '404':
+          description: Campaign not found
+        '403':
+          description: Admin access required
+        '401':
+          description: Unauthorized
+
+  # Payment Module (v1)
+  /api/v1/payments:
+    post:
+      summary: Process payment (Module)
+      tags: [Payment Module]
+      security:
+        - sanctum: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [donation_id, payment_method]
+              properties:
+                donation_id: { type: integer }
+                payment_method: { type: string, enum: [card, paypal, bank_transfer] }
+                payment_data: { type: object }
+                idempotency_key: { type: string }
+      responses:
+        '200':
+          description: Payment processed
+        '422':
+          description: Payment failed
+        '401':
+          description: Unauthorized
+
+  # Notification Module (v1)
+  /api/v1/notifications:
+    get:
+      summary: List user notifications (Module)
+      tags: [Notification Module]
+      security:
+        - sanctum: []
+      responses:
+        '200':
+          description: User notifications
+        '401':
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    sanctum:
+      type: http
+      scheme: bearer
+      description: Laravel Sanctum token authentication

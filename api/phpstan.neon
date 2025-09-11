@@ -1,0 +1,26 @@
+includes:
+    - ./vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 8
+    paths:
+        - app/
+        - Modules/
+        - database/
+        - tests/
+    excludePaths:
+        - app/Console/Kernel.php (?)
+        - app/Exceptions/Handler.php (?)
+        - bootstrap/
+        - storage/
+        - vendor/
+    ignoreErrors:
+        # Ignore Laravel framework internals
+        - '#Call to an undefined method Illuminate\\[\\a-zA-Z]+::[a-zA-Z]+\(\)#'
+        # Ignore dynamic properties on Eloquent models
+        - '#Access to an undefined property [a-zA-Z\\]+::\$[a-zA-Z_]+#'
+        # Ignore missing return types in migrations
+        - '#Method [a-zA-Z\\]+::up\(\) has no return type specified#'
+        - '#Method [a-zA-Z\\]+::down\(\) has no return type specified#'
+    reportUnmatchedIgnoredErrors: false
+    tmpDir: storage/framework/cache/phpstan
