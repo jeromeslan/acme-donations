@@ -10,6 +10,14 @@
           <p class="text-gray-600">Manage campaigns, donations, and platform statistics</p>
         </div>
 
+        <!-- Notifications -->
+        <BaseAlert
+          v-if="notification.show"
+          :type="notification.type"
+          :message="notification.message"
+          @dismiss="dismissNotification"
+        />
+
         <!-- Stats Grid -->
         <div class="dashboard-grid mb-12">
           <div class="stat-card">
@@ -77,7 +85,7 @@
             <span class="badge badge-warning">{{ pendingCampaigns.length }} pending</span>
           </div>
 
-          <div class="space-y-4">
+          <div class="campaigns-grid">
             <AdminCampaignCard
               v-for="campaign in pendingCampaigns"
               :key="campaign.id"
@@ -96,8 +104,8 @@
             <div v-if="loading" class="text-center py-8">
               <div class="loading"></div>
               <p class="mt-4 text-gray-600">Loading recent activity...</p>
-            </div>
-            
+      </div>
+
             <div v-else-if="recentActivity.length === 0" class="text-center py-8">
               <div class="text-gray-400 mb-4">
                 <svg class="w-12 h-12 mx-auto" fill="currentColor" viewBox="0 0 20 20">
@@ -105,7 +113,7 @@
                 </svg>
               </div>
               <p class="text-gray-600">No recent activity</p>
-            </div>
+      </div>
 
             <div v-else class="space-y-4">
               <div v-for="activity in recentActivity" :key="activity.id" class="flex items-center gap-4 py-3 border-b border-gray-100 last:border-b-0">
@@ -114,12 +122,12 @@
                   <p class="text-sm text-gray-900">{{ activity.description }}</p>
                   <p class="text-xs text-gray-500">{{ formatDate(activity.created_at) }}</p>
                 </div>
-              </div>
-            </div>
-          </BaseCard>
-        </section>
+        </div>
       </div>
-    </main>
+          </BaseCard>
+    </section>
+      </div>
+  </main>
   </div>
 </template>
 
@@ -128,12 +136,18 @@ import { ref, onMounted } from 'vue'
 import { api } from '@/api/client'
 import AppNavbar from '@/components/layout/AppNavbar.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseAlert from '@/components/ui/BaseAlert.vue'
 import AdminCampaignCard from '@/components/AdminCampaignCard.vue'
 
 const loading = ref(false)
 const stats = ref({})
 const pendingCampaigns = ref([])
 const recentActivity = ref([])
+const notification = ref({
+  show: false,
+  type: 'info' as 'success' | 'error' | 'warning' | 'info',
+  message: ''
+})
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -163,6 +177,11 @@ const fetchDashboardData = async () => {
     stats.value = statsResponse.data.stats || {}
     pendingCampaigns.value = campaignsResponse.data.campaigns || []
     recentActivity.value = statsResponse.data.recentActivity || []
+    
+    // Debug: log the data to see what we're getting
+    console.log('Dashboard stats:', stats.value)
+    console.log('Pending campaigns:', pendingCampaigns.value)
+    console.log('Recent activity:', recentActivity.value)
   } catch (error) {
     console.error('Error fetching dashboard data:', error)
   } finally {
@@ -170,23 +189,35 @@ const fetchDashboardData = async () => {
   }
 }
 
+const showNotification = (type: 'success' | 'error' | 'warning' | 'info', message: string) => {
+  notification.value = { show: true, type, message }
+}
+
+const dismissNotification = () => {
+  notification.value.show = false
+}
+
 const handleApproveCampaign = async (campaignId: number) => {
   try {
     await api.post(`/api/admin/campaigns/${campaignId}/approve`)
+    showNotification('success', 'Campaign approved successfully! It is now published and visible to all users.')
     // Refresh data
     await fetchDashboardData()
   } catch (error) {
     console.error('Error approving campaign:', error)
+    showNotification('error', 'Failed to approve campaign. Please try again.')
   }
 }
 
 const handleRejectCampaign = async (campaignId: number, reason?: string) => {
   try {
     await api.post(`/api/admin/campaigns/${campaignId}/reject`, { reason })
+    showNotification('success', 'Campaign rejected successfully.')
     // Refresh data
     await fetchDashboardData()
   } catch (error) {
     console.error('Error rejecting campaign:', error)
+    showNotification('error', 'Failed to reject campaign. Please try again.')
   }
 }
 
@@ -205,4 +236,17 @@ onMounted(() => {
 .rounded-lg { border-radius: 0.5rem; }
 .space-y-4 > * + * { margin-top: 1rem; }
 .last\\:border-b-0:last-child { border-bottom-width: 0; }
+
+/* Custom grid for campaigns - 2 columns layout */
+.campaigns-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .campaigns-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
 </style>
