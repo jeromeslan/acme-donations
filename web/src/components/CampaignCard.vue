@@ -61,7 +61,7 @@
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
-          <h2 class="modal-title">{{ campaign.title }}</h2>
+          <h2 class="modal-title">{{ campaignData.title }}</h2>
           <button @click="closeModal" class="modal-close-btn" aria-label="Close">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -79,11 +79,11 @@
           <div class="campaign-info">
             <div class="flex items-center gap-3 mb-4">
               <span :class="statusBadgeClass" class="badge">{{ statusLabel }}</span>
-              <span v-if="campaign.featured" class="badge badge-primary">Featured</span>
-              <span class="text-sm text-gray-600">{{ campaign.category?.name }}</span>
+              <span v-if="campaignData.featured" class="badge badge-primary">Featured</span>
+              <span class="text-sm text-gray-600">{{ campaignData.category?.name }}</span>
             </div>
             
-            <p class="text-gray-700 mb-6 leading-relaxed">{{ campaign.description }}</p>
+            <p class="text-gray-700 mb-6 leading-relaxed">{{ campaignData.description }}</p>
             
             <div class="progress-section mb-6">
               <div class="flex justify-between items-center mb-2">
@@ -97,16 +97,16 @@
             
             <div class="stats-grid">
               <div class="stat-item">
-                <div class="stat-value">{{ formatCurrency(Number(campaign.donated_amount) || 0) }}</div>
+                <div class="stat-value">{{ formatCurrency(Number(campaignData.donated_amount) || 0) }}</div>
                 <div class="stat-label">Raised</div>
               </div>
               <div class="stat-item">
-                <div class="stat-value">{{ formatCurrency(Number(campaign.goal_amount)) }}</div>
+                <div class="stat-value">{{ formatCurrency(Number(campaignData.goal_amount)) }}</div>
                 <div class="stat-label">Goal</div>
               </div>
               <div class="stat-item">
-                <div class="stat-value">{{ campaign.donations_count || 0 }}</div>
-                <div class="stat-label">Donor{{ (campaign.donations_count || 0) === 1 ? '' : 's' }}</div>
+                <div class="stat-value">{{ campaignData.donations_count || 0 }}</div>
+                <div class="stat-label">Donor{{ (campaignData.donations_count || 0) === 1 ? '' : 's' }}</div>
               </div>
             </div>
           </div>

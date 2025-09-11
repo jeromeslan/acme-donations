@@ -113,11 +113,8 @@
       </div>
 
       <div class="step-footer">
-        <button @click="$emit('close')" class="btn btn-secondary">
+        <button @click="$emit('close')" class="btn btn-primary btn-full">
           Close
-        </button>
-        <button @click="viewUpdatedCampaign" class="btn btn-primary">
-          View Updated Campaign
         </button>
       </div>
     </div>
@@ -290,10 +287,6 @@ const proceedToPayment = async () => {
   }
 }
 
-const viewUpdatedCampaign = () => {
-  emit('close')
-  // The parent component will handle showing the updated campaign
-}
 
 // Watch for custom amount changes
 watch(customAmountInput, () => {
