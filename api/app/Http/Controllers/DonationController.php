@@ -13,6 +13,15 @@ class DonationController extends Controller
     public function store(Request $request, Campaign $campaign)
     {
         $data = $request->validate(['amount' => 'required|numeric|min:1']);
+        
+        // Check if goal is reached
+        if ($campaign->donated_amount >= $campaign->goal_amount) {
+            return response()->json([
+                'message' => 'This campaign has already reached its funding goal.',
+                'error' => 'goal_reached'
+            ], 422);
+        }
+        
         $correlationId = (string) Str::uuid();
         $donation = Donation::create([
             'campaign_id' => $campaign->id,

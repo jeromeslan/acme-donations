@@ -11,10 +11,16 @@
         <div class="progress-info">
           <span class="current">{{ formatCurrency(Number(campaign.donated_amount) || 0) }} raised</span>
           <span class="goal">of {{ formatCurrency(Number(campaign.goal_amount)) }} goal</span>
+          <span v-if="isGoalReached" class="goal-reached">🎉 Goal Reached!</span>
         </div>
         <div class="progress-bar-mini">
-          <div class="progress-fill-mini" :style="{ width: progressPercentage + '%' }"></div>
+          <div class="progress-fill-mini" :style="{ width: progressPercentage + '%' }" :class="{ 'goal-reached': isGoalReached }"></div>
         </div>
+      </div>
+      
+      <!-- Goal Reached Warning -->
+      <div v-if="isGoalReached" class="goal-reached-warning">
+        <p class="warning-text">🎯 This campaign has reached its funding goal! Thank you to all donors.</p>
       </div>
 
       <div class="amount-selection">
@@ -24,7 +30,8 @@
             v-for="amount in presetAmounts"
             :key="amount"
             @click="selectAmount(amount)"
-            :class="['amount-btn', { active: selectedAmount === amount && !isCustomAmount }]"
+            :disabled="isGoalReached"
+            :class="['amount-btn', { active: selectedAmount === amount && !isCustomAmount, disabled: isGoalReached }]"
           >
             {{ formatCurrency(amount) }}
           </button>
@@ -39,6 +46,7 @@
               v-model="customAmountInput"
               @input="handleCustomAmountInput"
               @focus="isCustomAmount = true"
+              :disabled="isGoalReached"
               type="number"
               min="1"
               max="10000"
@@ -54,10 +62,10 @@
       <div class="step-footer">
         <button
           @click="proceedToPayment"
-          :disabled="!isValidAmount"
+          :disabled="!isValidAmount || isGoalReached"
           class="btn btn-primary btn-full"
         >
-          Proceed to Payment ({{ formatCurrency(finalAmount) }})
+          {{ isGoalReached ? 'Goal Reached' : `Proceed to Payment (${formatCurrency(finalAmount)})` }}
         </button>
       </div>
     </div>
@@ -185,6 +193,10 @@ const progressPercentage = computed(() => {
   return Math.min(Math.round((raised / goalAmount) * 100), 100)
 })
 
+const isGoalReached = computed(() => {
+  return progressPercentage.value >= 100
+})
+
 const finalAmount = computed(() => {
   if (isCustomAmount.value) {
     return Number(customAmountInput.value) || 0
@@ -231,6 +243,13 @@ const handleCustomAmountInput = () => {
 
 const proceedToPayment = async () => {
   if (!isValidAmount.value) return
+  
+  // Check if goal is reached
+  if (isGoalReached.value) {
+    errorMessage.value = 'This campaign has already reached its goal. Thank you for your interest!'
+    currentStep.value = 'error'
+    return
+  }
 
   currentStep.value = 'processing'
   
@@ -262,8 +281,10 @@ const proceedToPayment = async () => {
     updatedCampaign.value = updatedResponse.data
     
     console.log('Updated campaign data:', updatedCampaign.value)
+    console.log('Setting currentStep to success')
 
     currentStep.value = 'success'
+    console.log('currentStep is now:', currentStep.value)
     emit('donation-success', updatedCampaign.value)
 
   } catch (error: any) {
@@ -351,6 +372,31 @@ watch(customAmountInput, () => {
   transition: width 0.3s ease;
 }
 
+.progress-fill-mini.goal-reached {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.goal-reached {
+  color: #10b981;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.goal-reached-warning {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.warning-text {
+  color: #166534;
+  font-weight: 500;
+  margin: 0;
+  text-align: center;
+}
+
 .amount-selection {
   margin-bottom: 2rem;
 }
@@ -383,6 +429,22 @@ watch(customAmountInput, () => {
   border-color: #3b82f6;
   background-color: #3b82f6;
   color: white;
+}
+
+.amount-btn.disabled,
+.amount-btn:disabled {
+  background: #f3f4f6 !important;
+  color: #9ca3af !important;
+  border-color: #e5e7eb !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+}
+
+.custom-input:disabled {
+  background: #f3f4f6 !important;
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
 }
 
 .custom-amount {
