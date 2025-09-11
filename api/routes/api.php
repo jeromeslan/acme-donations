@@ -30,6 +30,9 @@ Route::post('/campaigns/{campaign}/donations', [DonationController::class, 'stor
 Route::get('/me/donations', [DonationController::class, 'myDonations'])->middleware('auth:sanctum');
 Route::get('/donations/{donation}/receipt', [DonationController::class, 'receipt'])->middleware('auth:sanctum');
 
+// Public stats endpoint
+Route::get('/stats', [AdminController::class, 'publicStats']);
+
 // Admin routes
 Route::get('/admin/kpis', [AdminController::class, 'kpis'])->middleware('auth:sanctum');
 Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->middleware('auth:sanctum');

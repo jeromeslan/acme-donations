@@ -27,6 +27,20 @@ class AdminController extends Controller
         ]);
     }
 
+    public function publicStats()
+    {
+        // Public statistics for the home page
+        $totalRaised = Donation::sum('amount') ?? 0;
+        $activeCampaigns = Campaign::where('status', 'active')->count();
+        $totalDonations = Donation::count();
+        
+        return response()->json([
+            'totalRaised' => (float)$totalRaised,
+            'totalCampaigns' => (int)$activeCampaigns, // Frontend expects totalCampaigns
+            'totalDonations' => (int)$totalDonations,
+        ]);
+    }
+
     public function dashboard()
     {
         // Get campaign statistics - use existing status values
