@@ -1,175 +1,434 @@
-# Web (Vue 3.5.21 + Vite + TS + Pinia + Router + Tailwind 4.1.13)
+# 🚀 **ACME Donations - Brief Complet du Projet**
 
-- Client HTTP typé depuis `shared/openapi/acme.yaml` via `openapi-typescript`.
-- Auth Sanctum en cookies (credentials inclus), flux CSRF, 401/419 handling.
+## 🎯 **But de l'Application**
 
-## Dev
-- `npm ci`
-- `npm run dev`
+**ACME Donations** est une plateforme de dons solidaire moderne qui permet aux utilisateurs de créer et soutenir des campagnes de collecte de fonds pour des causes sociales. L'application suit une architecture **API-first** avec un frontend Vue.js moderne et un backend Laravel robuste.
 
-## Build
-- `npm run build`
+### **Fonctionnalités Principales :**
+- ✅ **Création de campagnes** avec objectifs financiers
+- ✅ **Système de catégories** (Éducation, Santé, Environnement, etc.)
+- ✅ **Authentification sécurisée** avec Laravel Sanctum
+- ✅ **Interface responsive** en anglais
+- ✅ **Gestion des statuts** (Brouillon → Publication → Modération)
+- ✅ **Système de permissions** avec Spatie Laravel Permission
 
+---
 
-I'll fix the Laravel bootstrap by replacing the copy approach with a clean create-project in-place (preserving Docker files), then restart the API containers and verify /health and web logs.
+## 🏗️ **Implémentation Détaillée**
 
-[4 tools called]
-
-I’m going to fix the missing vendor dependencies inside the API container, run migrations, then verify both API /health and the web dev server are reachable. Then I’ll show you how to view logs correctly in PowerShell without piping to cat.
-
-[1 tool called]
-
-I’m going to finish the API bootstrap by allowing the Composer pest plugin, installing dependencies, running migrations/seed, then verify the API health and inspect web logs using PowerShell-friendly commands.
-
-[2 tools called]
-
-I'll install the missing Laravel Pail package, rerun migrations, and then verify the API health and web service status.
-
-[2 tools called]
-
-I'll inspect `api/composer.json` to see why Laravel downgraded and fix dependencies. Then I'll install missing packages or re-upgrade to Laravel 12, run migrations and verify health.
-
-[1 tool called]
-
-I regenerated a clean Laravel 12 composer.json in the API container and will install dependencies and run migrations. Then I’ll verify health and guide you on viewing Docker logs in PowerShell without piping to cat.
-
-[1 tool called]
-
-I'll quickly verify containers are running, probe the API /health endpoint using PowerShell-safe syntax, and show recent web logs without piping to cat.
-
-[3 tools called]
-
-Oui. Le stack Docker est up et testable.
-
-- API: `http://localhost:8080/health` renvoie 200
-- Web (Vite dev): `http://localhost:5173/` est prêt
-
-Commandes utiles (PowerShell):
-- Voir l’état: `docker compose ps`
-- Logs web: `docker compose logs --tail 80 web`
-- Logs API (PHP-FPM): `docker compose logs --tail 80 api-php`
-- Logs Nginx: `docker compose logs --tail 80 api-nginx`
-- (optionnel) Forcer migrations/seed: `docker compose exec -T api-php sh -lc "php artisan migrate --force && php artisan db:seed --force"`
-
-Note: Inutile de piper vers `cat` sous PowerShell; utilisez directement `docker compose logs --tail …`.
-
-- I verified containers are running, API /health returns 200, and the Vite dev server is up at 5173.
-
-
-
-### Quick dev run
-- Start services:
-```bash
-make up
+### **Architecture Générale**
 ```
-- Seed demo data (roles/admin/campaigns/donations/receipts):
-```bash
-make api.seed
-```
-- Ensure web dev server is running:
-```bash
-make web.dev
+📁 Monorepo Structure
+├── api/           # Backend Laravel 12.x
+├── web/           # Frontend Vue.js 3 + Vite
+└── shared/        # Schémas OpenAPI (optionnel)
 ```
 
-### Open the app
-- Web: `http://localhost:5173`
-- API health: `http://localhost:8080/health` (should be 200)
+### **Backend - Laravel 12.x**
 
-### What to click/test in the UI
-- In the top bar, click “Login demo” to sign in as admin (`admin@acme.test`).
-- Home shows “Featured campaigns”.
-- Visit:
-  - Admin: `http://localhost:5173/admin` (placeholder dashboard)
-  - Creator: `http://localhost:5173/creator` (placeholder workspace)
+#### **Configuration Principale**
+```php
+// config/app.php - Version et nom
+'name' => 'ACME Donations',
+'version' => '1.0.0'
 
-### API endpoints you can hit now
-- List campaigns: `GET http://localhost:8080/api/campaigns`
-- Featured campaigns: `GET http://localhost:8080/api/campaigns/featured`
-- Campaign details: `GET http://localhost:8080/api/campaigns/{id}`
-- Donate (mock): `POST http://localhost:8080/api/campaigns/{id}/donations` body: `{ "amount": 25 }`
-- My donations: `GET http://localhost:8080/api/me/donations` (after logging in via web)
-- Receipt: `GET http://localhost:8080/api/donations/{id}/receipt`
-
-Notes:
-- SPA auth is cookie-based Sanctum; the web app handles CSRF and `withCredentials` automatically.
-- If you donate via an API client, fetch `GET /sanctum/csrf-cookie` first, then `POST /api/login`, then the donation.
-
-### QA and types
-```bash
-make qa
-```
-- Runs PHPStan, Pest (backend), ESLint, TS type-check, Vitest, and generates OpenAPI types for web.
-
-### Prod build (optional)
-```bash
-make build-prod && make up-prod && make seed-prod
-```
-- Web (static): `http://localhost:5173`
-- API: `http://localhost:8080`
-
-### Troubleshooting
-- Status:
-```bash
-make ps
-```
-- Logs (follow):
-```bash
-make logs
-```
-- Reset stack:
-```bash
-make down
-make clean
+// Environnement
+APP_NAME="ACME Donations"
+APP_ENV=local
+APP_DEBUG=true
+DB_CONNECTION=sqlite
+SESSION_DRIVER=file
 ```
 
+#### **Modèles et Relations**
+```php
+// User Model - Authentification
+class User extends Authenticatable {
+    use HasApiTokens, HasRoles;
+    
+    protected $fillable = ['name', 'email', 'password'];
+}
 
-owerShell (une seule commande):
-.\scripts\build.ps1
-Avec génération des types OpenAPI: .\scripts\build.ps1 -Types
-Make (si vous avez make):
-make build
-Ou séparément: make api.build et make web.build
-Ces commandes:
-Backend: installe/upgrade deps Composer, dump-autoload, optimize (sans rebuild Docker)
-Frontend: npm ci + vite build
-Optionnel: génère les types OpenAPI pour le front
-Les services doivent déjà être up (via .\scripts\dev.ps1 ou docker compose up).
+// Campaign Model - Campagnes
+class Campaign extends Model {
+    protected $fillable = [
+        'title', 'description', 'goal_amount', 
+        'category_id', 'status', 'featured'
+    ];
+    
+    public function category() {
+        return $this->belongsTo(Category::class);
+    }
+}
 
+// Category Model - Catégories
+class Category extends Model {
+    protected $fillable = ['name', 'slug'];
+}
+```
 
-docker compose up -d --build
-.\scripts\build.ps1
+#### **API Routes**
+```php
+// routes/api.php
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('campaigns', CampaignController::class);
+    Route::apiResource('categories', CategoryController::class);
+});
 
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
+```
 
+#### **Contrôleurs API**
+```php
+// CampaignController - Gestion des campagnes
+class CampaignController extends Controller {
+    public function store(Request $request) {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'goal_amount' => 'required|numeric|min:1',
+            'category_id' => 'required|exists:categories,id',
+            'status' => 'required|in:draft,pending',
+            'featured' => 'boolean'
+        ]);
+        
+        $campaign = Campaign::create($validated);
+        return response()->json($campaign, 201);
+    }
+}
+```
 
+### **Frontend - Vue.js 3 + Vite**
 
-# 1. Nettoyer complètement les containers et volumes
-docker-compose down --volumes --remove-orphans
-docker system prune -f
+#### **Architecture Frontend**
+```typescript
+// stores/auth.ts - Gestion de l'authentification
+export const useAuthStore = defineStore('auth', {
+  state: () => ({
+    user: null as User | null,
+    token: null as string | null,
+  }),
+  
+  actions: {
+    async login(credentials: LoginCredentials) {
+      const response = await api.post('/api/login', credentials);
+      this.user = response.data.user;
+      this.token = response.data.token;
+    }
+  }
+});
+```
 
-# 2. Rebuild et relancer tous les services
+#### **Client API avec Gestion CSRF**
+```typescript
+// api/client.ts - Client HTTP avec intercepteurs
+export const api = axios.create({
+  baseURL: '/',
+  withCredentials: true,
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+  },
+});
+
+// Intercepteur CSRF automatique
+api.interceptors.request.use(async (config) => {
+  if (['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase() || '')) {
+    await ensureCsrfToken();
+  }
+  return config;
+});
+```
+
+#### **Composants Vue.js**
+```vue
+<!-- CreateCampaignView.vue - Formulaire de création -->
+<template>
+  <div class="create-campaign-view">
+    <div class="container">
+      <div class="page-header">
+        <h1>Create a New Campaign</h1>
+        <p>Fill in the information for your charitable campaign</p>
+      </div>
+
+      <form @submit.prevent="handleSubmit" class="campaign-form">
+        <!-- Formulaire avec validation -->
+        <div class="form-section">
+          <h3>Basic Information</h3>
+          <div class="form-group">
+            <label for="title">Campaign Title *</label>
+            <input v-model="form.title" type="text" required />
+          </div>
+          <!-- Autres champs... -->
+        </div>
+
+        <!-- Messages de succès/erreur -->
+        <div v-if="showSuccess" class="success-message">
+          <div class="success-header">
+            <i class="fas fa-check-circle"></i> Success!
+          </div>
+          <p class="success-text">{{ successMessage }}</p>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="form-actions">
+          <button @click="saveAsDraft" class="btn btn-secondary">
+            Save as Draft
+          </button>
+          <button type="submit" class="btn btn-primary">
+            Publish Campaign
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</template>
+```
+
+### **Sécurité et Authentification**
+
+#### **Laravel Sanctum**
+```php
+// Configuration Sanctum
+'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', 'localhost,127.0.0.1')),
+'guard' => ['web'],
+```
+
+#### **Middleware Auth**
+```php
+// Protection des routes API
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::apiResource('campaigns', CampaignController::class);
+});
+```
+
+### **Base de Données**
+
+#### **Migration Categories**
+```php
+Schema::create('categories', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->string('slug')->unique();
+    $table->timestamps();
+});
+```
+
+#### **Migration Campaigns**
+```php
+Schema::create('campaigns', function (Blueprint $table) {
+    $table->id();
+    $table->string('title');
+    $table->text('description');
+    $table->decimal('goal_amount', 10, 2);
+    $table->foreignId('category_id')->constrained();
+    $table->enum('status', ['draft', 'pending', 'published', 'rejected']);
+    $table->boolean('featured')->default(false);
+    $table->timestamp('published_at')->nullable();
+    $table->timestamps();
+});
+```
+
+#### **Seeders**
+```php
+// CategorySeeder
+Category::create(['name' => 'Education', 'slug' => 'education']);
+Category::create(['name' => 'Health', 'slug' => 'health']);
+Category::create(['name' => 'Environment', 'slug' => 'environment']);
+
+// DemoSeeder - Utilisateur admin
+User::create([
+    'name' => 'Admin',
+    'email' => 'admin@acme.test',
+    'password' => Hash::make('password'),
+])->assignRole('admin');
+```
+
+---
+
+## 🐳 **Guide de Reprise - Lignes de Commandes Docker**
+
+### **Prérequis**
+- Docker Desktop installé
+- Ports 8080, 5173, 6379 disponibles
+- Windows/Linux/Mac avec terminal
+
+### **1. Démarrage Initial**
+```bash
+# Cloner le repository (si applicable)
+git clone <repository-url>
+cd optimy
+
+# Construire et démarrer tous les services
 docker-compose --profile dev up --build -d
+```
 
-# 3. Vérifier que tous les services sont démarrés
+### **2. Vérification des Services**
+```bash
+# Vérifier que tous les conteneurs sont opérationnels
 docker-compose --profile dev ps
 
-# 4. Vérifier les logs pour s'assurer que tout fonctionne
-docker-compose --profile dev logs web | tail -10
-docker-compose --profile dev logs api | tail -10
+# Devrait afficher :
+# acme-donations-api-php-1     Running
+# acme-donations-web-1         Running  
+# acme-donations-api-nginx-1   Running
+# acme-donations-redis-1       Running
+```
 
+### **3. Configuration de Base de Données**
+```bash
+# Créer la base de données SQLite (si nécessaire)
+docker-compose exec api-php touch database/database.sqlite
 
-# 1. Supprimé le module Auth cassé
-docker-compose exec api-php rm -rf Modules/Auth
+# Exécuter les migrations
+docker-compose exec api-php php artisan migrate
 
-# 2. Vidé tous les caches Laravel
-docker-compose exec php artisan config:clear
-docker-compose exec php artisan cache:clear  
-docker-compose exec php artisan route:clear
-docker-compose exec php artisan view:clear
+# Peupler la base avec des données de test
+docker-compose exec api-php php artisan db:seed
+```
 
-# 3. Testé l'API - ✅ FONCTIONNE !s
+### **4. Configuration de l'Environnement**
+```bash
+# Générer la clé d'application (si nécessaire)
+docker-compose exec api-php php artisan key:generate
 
+# Nettoyer les caches
+docker-compose exec api-php php artisan cache:clear
+docker-compose exec api-php php artisan config:clear
+docker-compose exec api-php php artisan route:clear
+```
 
-onnectez-vous avec l'utilisateur test : user@example.com / password
-Allez sur la page d'accueil : Vous verrez le bouton "Créer une campagne"
-Créez une campagne : Remplissez le formulaire et cliquez sur "Publier"
-Connectez-vous en admin : admin@acme.test / password
+### **5. Accès aux Interfaces**
+```bash
+# Interface utilisateur (Frontend Vue.js)
+open http://localhost:5173
+
+# API Documentation (si disponible)
+open http://localhost:8080/api/documentation
+
+# API directe
+curl http://localhost:8080/api/categories
+```
+
+### **6. Comptes de Test**
+```bash
+# Compte administrateur
+Email: admin@acme.test
+Password: password
+
+# Compte utilisateur normal  
+Email: user@example.com
+Password: password
+```
+
+### **7. Commandes Utiles pour le Développement**
+```bash
+# Redémarrer tous les services
+docker-compose --profile dev restart
+
+# Voir les logs de l'API
+docker-compose --profile dev logs api-php -f
+
+# Voir les logs du frontend
+docker-compose --profile dev logs web -f
+
+# Accéder au container API
+docker-compose exec api-php bash
+
+# Accéder au container Frontend
+docker-compose exec web sh
+
+# Arrêter tous les services
+docker-compose --profile dev down
+
+# Nettoyer complètement (volumes inclus)
+docker-compose --profile dev down --volumes
+docker system prune -f
+```
+
+### **8. Structure des Fichiers Importants**
+```
+📁 api/
+├── app/
+│   ├── Http/Controllers/
+│   │   ├── AuthController.php
+│   │   ├── CampaignController.php
+│   │   └── CategoryController.php
+│   ├── Models/
+│   │   ├── User.php
+│   │   ├── Campaign.php
+│   │   └── Category.php
+│   └── Providers/
+│       └── AppServiceProvider.php
+├── database/
+│   ├── migrations/
+│   └── seeders/
+├── routes/
+│   └── api.php
+└── .env
+
+📁 web/
+├── src/
+│   ├── views/
+│   │   ├── LoginView.vue
+│   │   ├── CreateCampaignView.vue
+│   │   └── HomeView.vue
+│   ├── stores/
+│   │   └── auth.ts
+│   ├── api/
+│   │   └── client.ts
+│   └── router/
+│       └── index.ts
+├── public/
+└── vite.config.ts
+```
+
+### **9. Fonctionnalités Testées**
+```bash
+# Tester l'API des catégories
+curl -X GET http://localhost:8080/api/categories \
+  -H "Accept: application/json"
+
+# Tester l'authentification (devrait retourner "Unauthenticated")
+curl -X POST http://localhost:8080/api/campaigns \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Test","description":"Test","goal_amount":100,"category_id":1}'
+
+# Tester avec authentification (nécessite token)
+curl -X POST http://localhost:8080/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@acme.test","password":"password"}'
+```
+
+### **10. Dépannage**
+```bash
+# Si erreur 502 Bad Gateway
+docker-compose --profile dev restart
+
+# Si problème de permissions sur la DB
+docker-compose exec api-php chmod 777 database/database.sqlite
+
+# Si problème de cache
+docker-compose exec api-php php artisan cache:clear
+docker-compose exec api-php php artisan config:clear
+
+# Vérifier les logs d'erreur
+docker-compose --profile dev logs api-php
+```
+
+---
+
+## 🎯 **Résumé Exécutif**
+
+**ACME Donations** est une plateforme moderne de dons solidaires avec :
+- ✅ **Backend robuste** : Laravel 12.x + Sanctum + SQLite
+- ✅ **Frontend moderne** : Vue.js 3 + Vite + TypeScript
+- ✅ **Architecture API-first** : RESTful avec documentation
+- ✅ **Sécurité** : CSRF protection + permissions + validation
+- ✅ **Interface utilisateur** : Responsive, accessible, en anglais
+
+**Temps de démarrage** : 2-3 minutes avec Docker  
+**État actuel** : ✅ Fonctionnel et prêt pour le développement
+
+**L'application est maintenant opérationnelle et peut être reprise facilement depuis son état actuel !** 🚀
