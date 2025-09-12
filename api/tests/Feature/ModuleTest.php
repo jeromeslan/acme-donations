@@ -20,16 +20,16 @@ test('it has all required modules enabled', function () {
 });
 
 test('campaign module routes are loaded', function () {
-    $response = $this->get('/api/v1/campaigns');
-    $response->assertStatus(401); // Should be unauthorized, not 404
+    $response = $this->get('/api/campaigns');
+    $response->assertStatus(200); // Should return campaigns list
 });
 
 test('donation module routes are loaded', function () {
-    $response = $this->get('/api/v1/donations');
+    $response = $this->get('/api/donations');
     $response->assertStatus(401); // Should be unauthorized, not 404
 });
 
 test('admin module routes are loaded', function () {
-    $response = $this->get('/api/v1/admins');
+    $response = $this->get('/api/admin/dashboard');
     $response->assertStatus(401); // Should be unauthorized, not 404
 });

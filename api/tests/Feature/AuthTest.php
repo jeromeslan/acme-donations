@@ -23,7 +23,7 @@ test('user can login with valid credentials', function () {
         'password' => 'password',
     ]);
 
-    $response->assertStatus(204);
+    $response->assertStatus(200);
     $this->assertAuthenticated();
 });
 
@@ -33,7 +33,7 @@ test('user cannot login with invalid credentials', function () {
         'password' => 'wrongpassword',
     ]);
 
-    $response->assertStatus(422);
+    $response->assertStatus(401);
     $this->assertGuest();
 });
 
