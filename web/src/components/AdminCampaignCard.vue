@@ -28,12 +28,25 @@
         </div>
       </div>
 
+      <!-- Featured Campaign Option -->
+      <div class="mb-3">
+        <label class="flex items-center gap-2">
+          <input
+            v-model="isFeatured"
+            type="checkbox"
+            class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+          />
+          <span class="text-sm text-gray-700">Featured campaign</span>
+        </label>
+        <p class="text-xs text-gray-500 mt-1">Featured campaigns are highlighted on the homepage</p>
+      </div>
+
       <!-- Action Buttons -->
       <div class="flex items-center gap-2">
         <BaseButton
           variant="primary"
           size="sm"
-          @click="$emit('approve', campaign.id)"
+          @click="$emit('approve', campaign.id, isFeatured)"
           :loading="loading"
           class="flex-1"
         >
@@ -122,13 +135,14 @@ interface Props {
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  approve: [campaignId: number]
+  approve: [campaignId: number, featured?: boolean]
   reject: [campaignId: number, reason?: string]
 }>()
 
 const loading = ref(false)
 const showRejectModal = ref(false)
 const rejectReason = ref('')
+const isFeatured = ref(false)
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {

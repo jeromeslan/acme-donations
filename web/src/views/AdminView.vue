@@ -182,9 +182,11 @@ const fetchDashboardData = async () => {
 
 // Notifications now handled by toast system
 
-const handleApproveCampaign = async (campaignId: number) => {
+const handleApproveCampaign = async (campaignId: number, featured: boolean = false) => {
   try {
-    await api.post(`/api/admin/campaigns/${campaignId}/approve`)
+    await api.post(`/api/admin/campaigns/${campaignId}/approve`, {
+      featured: featured
+    })
     toast.success('Campaign approved successfully! It is now published and visible to all users. ✅', {
       timeout: 5000
     })

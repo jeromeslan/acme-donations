@@ -126,18 +126,27 @@ class AdminController extends Controller
     public function approveCampaign($id)
     {
         $campaign = Campaign::findOrFail($id);
-        $campaign->update(['status' => 'active']);
+        
+        // Get featured status from request
+        $featured = request('featured', false);
+        
+        $campaign->update([
+            'status' => 'active',
+            'featured' => $featured
+        ]);
 
         // Create notification for campaign creator
+        $featuredMessage = $featured ? ' and has been featured on the homepage!' : '!';
         Notification::create([
             'user_id' => $campaign->creator_id,
             'campaign_id' => $campaign->id,
             'type' => 'campaign_approved',
             'title' => 'Campaign Approved! 🎉',
-            'message' => "Your campaign '{$campaign->title}' has been approved and is now live! Users can start donating to support your cause.",
+            'message' => "Your campaign '{$campaign->title}' has been approved and is now live{$featuredMessage} Users can start donating to support your cause.",
             'data' => [
                 'campaign_title' => $campaign->title,
-                'campaign_id' => $campaign->id
+                'campaign_id' => $campaign->id,
+                'featured' => $featured
             ]
         ]);
 

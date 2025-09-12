@@ -80,22 +80,6 @@
               </div>
             </div>
 
-            <!-- Optional Settings -->
-            <div>
-              <h3 class="text-lg font-semibold text-gray-900 mb-4">Optional Settings</h3>
-              
-              <div class="form-group">
-                <label class="flex items-center gap-3">
-                  <input
-                    v-model="form.featured"
-                    type="checkbox"
-                    class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                  />
-                  <span class="text-sm text-gray-700">Request to be featured</span>
-                </label>
-                <p class="text-xs text-gray-500 mt-1">Featured campaigns are highlighted on the homepage</p>
-              </div>
-            </div>
 
             <!-- Error Display -->
             <BaseAlert v-if="errors.general" variant="error" dismissible>
@@ -164,8 +148,7 @@ const form = reactive({
   title: '',
   description: '',
   goal_amount: '',
-  category_id: '',
-  featured: false
+  category_id: ''
 })
 
 // Track the draft campaign ID if exists
@@ -203,11 +186,7 @@ const clearErrors = () => {
 
 const resetForm = () => {
   Object.keys(form).forEach(key => {
-    if (key === 'featured') {
-      form[key] = false
-    } else {
-      form[key] = ''
-    }
+    form[key] = ''
   })
   clearValidationErrors()
   draftCampaignId.value = null
