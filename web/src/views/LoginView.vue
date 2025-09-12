@@ -44,9 +44,15 @@
         </form>
 
         <template #footer>
-          <div class="text-center">
+          <div class="text-center space-y-2">
             <p class="text-sm text-gray-600">
-              Demo credentials: <strong>admin@acme.test</strong> / <strong>password</strong>
+              Demo credentials:
+            </p>
+            <p class="text-sm text-gray-600">
+              <strong>admin@acme.test</strong> / <strong>password</strong>
+            </p>
+            <p class="text-sm text-gray-600">
+              <strong>user@acme.test</strong> / <strong>password</strong>
             </p>
           </div>
         </template>
