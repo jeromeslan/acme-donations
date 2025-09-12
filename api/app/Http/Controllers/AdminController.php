@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
-    public function kpis()
+    public function kpis(): \Illuminate\Http\JsonResponse
     {
         $totals = Donation::selectRaw('COUNT(*) as donations_count, SUM(amount) as donations_sum')->first();
         $uniqueDonors = Donation::distinct('user_id')->count('user_id');
@@ -27,10 +27,10 @@ class AdminController extends Controller
         ]);
     }
 
-    public function publicStats()
+    public function publicStats(): \Illuminate\Http\JsonResponse
     {
         // Public statistics for the home page
-        $totalRaised = Donation::sum('amount') ?? 0;
+        $totalRaised = Donation::sum('amount') ?: 0;
         $activeCampaigns = Campaign::where('status', 'active')->count();
         $totalDonations = Donation::count();
         
@@ -41,7 +41,7 @@ class AdminController extends Controller
         ]);
     }
 
-    public function dashboard()
+    public function dashboard(): \Illuminate\Http\JsonResponse
     {
         // Get campaign statistics - use existing status values
         $totalCampaigns = Campaign::count();
@@ -51,7 +51,7 @@ class AdminController extends Controller
         
         // Get donation statistics
         $totalDonations = Donation::count();
-        $totalRaised = Donation::sum('amount') ?? 0;
+        $totalRaised = Donation::sum('amount') ?: 0;
         
         // Get user statistics
         $totalUsers = User::count();
@@ -86,33 +86,19 @@ class AdminController extends Controller
 
 
 
-    public function pendingCampaigns()
+    public function pendingCampaigns(): \Illuminate\Http\JsonResponse
     {
         $campaigns = Campaign::with(['category', 'creator'])
             ->where('status', 'pending')
             ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($campaign) {
-                return [
-                    'id' => $campaign->id,
-                    'title' => $campaign->title,
-                    'description' => $campaign->description,
-                    'goal_amount' => $campaign->goal_amount,
-                    'donated_amount' => $campaign->donated_amount,
-                    'status' => $campaign->status,
-                    'featured' => $campaign->featured,
-                    'created_at' => $campaign->created_at,
-                    'category' => $campaign->category ? $campaign->category->name : null,
-                    'creator' => $campaign->creator ? $campaign->creator->name : null,
-                ];
-            });
+            ->get();
 
         return response()->json([
             'campaigns' => $campaigns
         ]);
     }
 
-    private function getStatusAction($status)
+    private function getStatusAction(string $status): string
     {
         return match($status) {
             'active' => 'published',
@@ -123,8 +109,9 @@ class AdminController extends Controller
         };
     }
 
-    public function approveCampaign($id)
+    public function approveCampaign(int $id): \Illuminate\Http\JsonResponse
     {
+        /** @var Campaign $campaign */
         $campaign = Campaign::findOrFail($id);
         
         // Get featured status from request
@@ -156,8 +143,9 @@ class AdminController extends Controller
         ]);
     }
 
-    public function rejectCampaign($id)
+    public function rejectCampaign(int $id): \Illuminate\Http\JsonResponse
     {
+        /** @var Campaign $campaign */
         $campaign = Campaign::findOrFail($id);
         $reason = request('reason', 'No reason provided');
         
@@ -186,7 +174,7 @@ class AdminController extends Controller
         ]);
     }
 
-    public function allCampaigns()
+    public function allCampaigns(): \Illuminate\Http\JsonResponse
     {
         $campaigns = Campaign::query()
             ->with(['category', 'creator:id,name,email'])

@@ -7,15 +7,20 @@ use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): \Illuminate\Http\JsonResponse
     {
-        $notifications = Notification::forUser($request->user()->id)
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $notifications = Notification::forUser($user->id)
             ->with('campaign:id,title')
             ->orderByDesc('created_at')
             ->limit(20)
             ->get();
 
-        $unreadCount = Notification::forUser($request->user()->id)
+        $unreadCount = Notification::forUser($user->id)
             ->unread()
             ->count();
 
@@ -25,9 +30,15 @@ class NotificationController extends Controller
         ]);
     }
 
-    public function markAsRead(Request $request, $id)
+    public function markAsRead(Request $request, int $id): \Illuminate\Http\JsonResponse
     {
-        $notification = Notification::forUser($request->user()->id)
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        /** @var Notification $notification */
+        $notification = Notification::forUser($user->id)
             ->findOrFail($id);
         
         $notification->markAsRead();
@@ -35,9 +46,14 @@ class NotificationController extends Controller
         return response()->json(['message' => 'Notification marked as read']);
     }
 
-    public function markAllAsRead(Request $request)
+    public function markAllAsRead(Request $request): \Illuminate\Http\JsonResponse
     {
-        Notification::forUser($request->user()->id)
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        Notification::forUser($user->id)
             ->unread()
             ->update(['read_at' => now()]);
 

@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\Cache;
 
 class CampaignController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): \Illuminate\Http\JsonResponse
     {
-        $cacheKey = 'campaigns:index:' . md5(json_encode($request->query()));
+        $cacheKey = 'campaigns:index:' . md5(json_encode($request->query()) ?: '');
         $ttl = 60; // seconds
         $query = Campaign::query()->with('category')->withCount('donations')
             ->when($request->filled('q'), function ($query) use ($request) {
@@ -43,26 +43,30 @@ class CampaignController extends Controller
         // Safety fallback: if empty page but campaigns exist, return latest campaigns
         if ($page->total() === 0 && \App\Models\Campaign::query()->count() > 0) {
             $fallback = Campaign::query()->with('category')->withCount('donations')->orderByDesc('id');
-            return $fallback->paginate(perPage: (int)$request->integer('per_page', 12));
+            $page = $fallback->paginate(perPage: (int)$request->integer('per_page', 12));
         }
 
-        return $page;
+        return response()->json($page);
     }
 
-    public function featured()
+    public function featured(): \Illuminate\Http\JsonResponse
     {
-        return Cache::store('redis')->tags(['campaigns'])->remember('campaigns:featured', 60, fn() => Campaign::query()
+        $featured = Cache::store('redis')->tags(['campaigns'])->remember('campaigns:featured', 60, fn() => Campaign::query()
             ->where('featured', true)->where('status', 'active')
             ->with('category')->withCount('donations')
             ->orderByDesc('id')->limit(8)->get());
+        
+        return response()->json($featured);
     }
 
-    public function show(Campaign $campaign)
+    public function show(Campaign $campaign): \Illuminate\Http\JsonResponse
     {
-        return Cache::store('redis')->tags(["campaign:{$campaign->id}", 'campaigns'])->remember("campaigns:show:{$campaign->id}", 60, fn() => $campaign->load('category')->loadCount('donations'));
+        $campaignData = Cache::store('redis')->tags(["campaign:{$campaign->id}", 'campaigns'])->remember("campaigns:show:{$campaign->id}", 60, fn() => $campaign->load('category')->loadCount('donations'));
+        
+        return response()->json($campaignData);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\JsonResponse
     {
         $data = $request->validate([
             'title' => 'required|string|max:255',
@@ -80,10 +84,15 @@ class CampaignController extends Controller
         return response()->json($campaign, 201);
     }
 
-    public function update(Request $request, Campaign $campaign)
+    public function update(Request $request, Campaign $campaign): \Illuminate\Http\JsonResponse
     {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         // Ensure only the creator can update their campaign
-        if ($campaign->creator_id !== $request->user()->id) {
+        if ($campaign->creator_id !== $user->id) {
             return response()->json(['message' => 'Unauthorized to update this campaign.'], 403);
         }
 
@@ -106,17 +115,22 @@ class CampaignController extends Controller
         return response()->json($campaign);
     }
 
-    public function destroy(Campaign $campaign)
+    public function destroy(Campaign $campaign): \Illuminate\Http\Response
     {
         $campaign->delete();
         Cache::store('redis')->tags(["campaign:{$campaign->id}", 'campaigns'])->flush();
         return response()->noContent();
     }
 
-    public function myCampaigns(Request $request)
+    public function myCampaigns(Request $request): \Illuminate\Http\JsonResponse
     {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
         $campaigns = Campaign::query()
-            ->where('creator_id', $request->user()->id)
+            ->where('creator_id', $user->id)
             ->with('category')
             ->withCount('donations')
             ->orderByDesc('created_at')
