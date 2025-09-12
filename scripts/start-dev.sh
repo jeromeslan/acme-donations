@@ -1,15 +1,15 @@
 #!/bin/bash
-# Script de démarrage robuste pour éviter les 502 Bad Gateway
+# Robust startup script to avoid 502 Bad Gateway errors
 # Usage: ./scripts/start-dev.sh
 
-echo "🚀 Démarrage de l'environnement de développement..."
+echo "🚀 Starting development environment..."
 
-# Arrêter tous les services existants
-echo "⏹️  Arrêt des services existants..."
+# Stop all existing services
+echo "⏹️  Stopping existing services..."
 docker-compose down
 
-# Démarrer les services dans l'ordre
-echo "🔄 Démarrage des services..."
+# Start services in order
+echo "🔄 Starting services..."
 docker-compose up -d redis
 sleep 2
 
@@ -24,37 +24,54 @@ sleep 2
 
 docker-compose up -d web
 
-# Attendre que tous les services soient prêts
-echo "⏳ Attente que tous les services soient prêts..."
+# Wait for all services to be ready
+echo "⏳ Waiting for all services to be ready..."
 sleep 10
 
-# Corriger les permissions de la base de données SQLite
-echo "🔧 Correction des permissions de la base de données..."
+# Fix SQLite database permissions
+echo "🔧 Fixing database permissions..."
 docker-compose exec api-php chmod 666 database/database.sqlite
 
-# Vérifier l'état des services
-echo "🔍 Vérification de l'état des services..."
+# Run database migrations
+echo "📊 Running database migrations..."
+docker-compose exec api-php php artisan migrate --force
+
+# Seed the database with demo data
+echo "🌱 Seeding database with demo data..."
+docker-compose exec api-php php artisan db:seed --force
+
+# Create demo users
+echo "👥 Creating demo users..."
+docker-compose exec api-php php artisan db:seed --class=UserSeeder
+
+# Check services status
+echo "🔍 Checking services status..."
 docker-compose ps
 
-# Tester l'API
-echo "🧪 Test de l'API..."
-if curl -s -f http://localhost:8080/api/stats > /dev/null; then
-    echo "✅ API fonctionne correctement !"
+# Test API
+echo "🧪 Testing API..."
+if curl -s -f http://localhost:8080/health > /dev/null; then
+    echo "✅ API is working correctly!"
 else
-    echo "❌ Erreur lors du test de l'API"
-    echo "🔄 Redémarrage des services API..."
+    echo "❌ Error testing API"
+    echo "🔄 Restarting API services..."
     docker-compose restart api-php api-nginx
     sleep 5
     
-    # Nouveau test
-    if curl -s -f http://localhost:8080/api/stats > /dev/null; then
-        echo "✅ API fonctionne après redémarrage !"
+    # Retry test
+    if curl -s -f http://localhost:8080/health > /dev/null; then
+        echo "✅ API is working after restart!"
     else
-        echo "❌ L'API ne fonctionne toujours pas. Vérifiez les logs avec: docker-compose logs api-php"
+        echo "❌ API is still not working. Check logs with: docker-compose logs api-php"
     fi
 fi
 
-echo "🎉 Environnement de développement prêt !"
+echo "🎉 Development environment ready!"
 echo "📱 Frontend: http://localhost:5173"
 echo "🔧 API: http://localhost:8080"
 echo "📊 Redis: localhost:6379"
+echo ""
+echo "👥 Demo accounts created:"
+echo "   Admin: admin@acme.test / password"
+echo "   User: user@acme.test / password"
+echo "   Creator: creator@acme.test / password"
