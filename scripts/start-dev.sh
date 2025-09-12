@@ -28,6 +28,10 @@ docker-compose up -d web
 echo "⏳ Waiting for all services to be ready..."
 sleep 10
 
+# Install frontend dependencies and start dev server
+echo "📦 Installing frontend dependencies..."
+docker-compose exec web npm install
+
 # Fix SQLite database permissions
 echo "🔧 Fixing database permissions..."
 docker-compose exec api-php chmod 666 database/database.sqlite

@@ -27,6 +27,10 @@ docker-compose up -d web
 Write-Host "Waiting for all services to be ready..." -ForegroundColor Yellow
 Start-Sleep -Seconds 10
 
+# Install frontend dependencies and start dev server
+Write-Host "Installing frontend dependencies..." -ForegroundColor Yellow
+docker-compose exec web npm install
+
 # Fix SQLite database permissions
 Write-Host "Fixing database permissions..." -ForegroundColor Yellow
 docker-compose exec api-php chmod 666 database/database.sqlite
