@@ -30,6 +30,11 @@ api/.env
 api/.env.backup
 api/.env.local
 
+# Database files
+api/database/database.sqlite
+api/database/*.sqlite
+api/database/*.db
+
 # Composer
 composer.lock
 
