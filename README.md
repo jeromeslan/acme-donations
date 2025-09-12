@@ -23,22 +23,26 @@ cd acme-donations
 
 # 2. Start everything with database seeding (choose your platform)
 
-# Windows (PowerShell)
-.\scripts\dev.ps1 dev-setup
+# Windows (PowerShell) - RECOMMANDÉ (évite les 502 Bad Gateway)
+.\scripts\start-dev.ps1
 
 # Linux/Mac (Make)
 make dev-setup
 
-# Or manually with Docker Compose
+# Linux/Mac (Script)
+chmod +x scripts/start-dev.sh
+./scripts/start-dev.sh
+
+# Or manually with Docker Compose (si les scripts ne fonctionnent pas)
 docker-compose --profile dev up -d --build
 docker-compose exec api-php php artisan migrate
 docker-compose exec api-php php artisan db:seed
 ```
 
 ### 🎭 Demo Accounts (Auto-created)
-- **Admin**: `admin@acme.com` / `password`
-- **Creator**: `creator@acme.com` / `password`  
-- **User**: `user@acme.com` / `password`
+- **Admin**: `admin@acme.test` / `password`
+- **Creator**: `creator@acme.test` / `password`  
+- **User**: `user@acme.test` / `password`
 
 ### 🌐 Access URLs
 - **Frontend**: http://localhost:5173
@@ -58,7 +62,20 @@ make phpstan                    # Linux/Mac
 
 ### 🔧 Troubleshooting
 
-**Services not starting?**
+#### 502 Bad Gateway Error
+Si vous obtenez une erreur 502 Bad Gateway, utilisez le script de démarrage robuste :
+
+```bash
+# Windows (RECOMMANDÉ)
+.\scripts\start-dev.ps1
+
+# Linux/Mac
+./scripts/start-dev.sh
+```
+
+Ce script démarre les services dans le bon ordre et teste automatiquement l'API.
+
+#### Services not starting?
 ```bash
 # Check service status
 .\scripts\dev.ps1 status        # Windows
@@ -67,6 +84,21 @@ make status                     # Linux/Mac
 # View logs
 .\scripts\dev.ps1 logs          # Windows
 make logs                       # Linux/Mac
+
+# Restart API services
+docker-compose restart api-php api-nginx
+```
+
+#### Database Read-Only Error
+Si vous obtenez l'erreur `attempt to write a readonly database` :
+
+```bash
+# Fix database permissions
+.\scripts\dev.ps1 fix-permissions  # Windows
+make fix-permissions               # Linux/Mac
+
+# Or manually
+docker-compose exec api-php chmod 666 database/database.sqlite
 ```
 
 **Database issues?**

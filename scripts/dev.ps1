@@ -21,6 +21,8 @@ function Show-Help {
     Write-Host "  migrate        Run database migrations" -ForegroundColor Green
     Write-Host "  seed           Seed the database" -ForegroundColor Green
     Write-Host "  fresh          Fresh migration and seed" -ForegroundColor Green
+    Write-Host "  demo-users     Create demo users (admin, user, creator)" -ForegroundColor Green
+    Write-Host "  fix-permissions Fix database permissions" -ForegroundColor Green
     Write-Host "  test           Run all tests" -ForegroundColor Green
     Write-Host "  test-unit      Run unit tests" -ForegroundColor Green
     Write-Host "  test-feature   Run feature tests" -ForegroundColor Green
@@ -98,6 +100,21 @@ switch ($Command.ToLower()) {
     "fresh" { 
         Write-Host "Running fresh migration and seed..." -ForegroundColor Yellow
         Invoke-DockerExec "api-php" "php artisan migrate:fresh --seed"
+    }
+    
+    "demo-users" { 
+        Write-Host "Creating demo users..." -ForegroundColor Yellow
+        docker-compose exec api-php php artisan db:seed --class=UserSeeder
+        Write-Host "Demo users created successfully!" -ForegroundColor Green
+        Write-Host "Admin: admin@acme.test / password" -ForegroundColor Cyan
+        Write-Host "User: user@acme.test / password" -ForegroundColor Cyan
+        Write-Host "Creator: creator@acme.test / password" -ForegroundColor Cyan
+    }
+    
+    "fix-permissions" { 
+        Write-Host "Fixing database permissions..." -ForegroundColor Yellow
+        docker-compose exec api-php chmod 666 database/database.sqlite
+        Write-Host "Database permissions fixed!" -ForegroundColor Green
     }
     
     "test" { 

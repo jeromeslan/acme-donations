@@ -44,6 +44,12 @@ seed: ## Seed the database
 fresh: ## Fresh migration and seed
 	docker-compose exec api-php php artisan migrate:fresh --seed
 
+demo-users: ## Create demo users (admin, user, creator)
+	docker-compose exec api-php php artisan db:seed --class=UserSeeder
+
+fix-permissions: ## Fix database permissions
+	docker-compose exec api-php chmod 666 database/database.sqlite
+
 # Testing commands
 test: ## Run all tests
 	docker-compose exec api-php ./vendor/bin/pest
@@ -120,6 +126,8 @@ install: ## Install dependencies
 
 # Quick development setup
 dev-setup: build migrate seed ## Complete development setup
+	@echo "🔧 Fixing database permissions..."
+	docker-compose exec api-php chmod 666 database/database.sqlite
 	@echo "✅ Development environment ready!"
 	@echo "🌐 Frontend: http://localhost:5173"
 	@echo "🔧 Backend: http://localhost:8080"
