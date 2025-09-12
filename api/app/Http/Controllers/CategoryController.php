@@ -7,17 +7,17 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(): \Illuminate\Database\Eloquent\Collection
     {
         return Category::orderBy('name')->get();
     }
 
-    public function show(Category $category)
+    public function show(Category $category): Category
     {
         return $category->load('campaigns');
     }
 
-    public function store(Request $request)
+    public function store(Request $request): Category
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
@@ -27,7 +27,7 @@ class CategoryController extends Controller
         return Category::create($data);
     }
 
-    public function update(Request $request, Category $category)
+    public function update(Request $request, Category $category): Category
     {
         $data = $request->validate([
             'name' => 'sometimes|string|max:255',
@@ -38,7 +38,7 @@ class CategoryController extends Controller
         return $category;
     }
 
-    public function destroy(Category $category)
+    public function destroy(Category $category): \Illuminate\Http\JsonResponse|\Illuminate\Http\Response
     {
         // Vérifier si la catégorie a des campagnes
         if ($category->campaigns()->count() > 0) {

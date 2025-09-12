@@ -90,7 +90,7 @@ class DemoSeeder extends Seeder
                 }
             }
 
-            $this->command?->info("Seeded campaigns: " . $campaigns->count() . ", donations: $donations");
+            $this->command->info("Seeded campaigns: " . $campaigns->count() . ", donations: $donations");
         });
     }
 }

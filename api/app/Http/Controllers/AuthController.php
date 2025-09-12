@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    public function login(Request $request)
+    public function login(Request $request): \Illuminate\Http\JsonResponse|\Illuminate\Http\Response
     {
         $credentials = $request->validate([
             'email' => ['required','email'],
@@ -20,7 +20,7 @@ class AuthController extends Controller
         return response()->noContent();
     }
 
-    public function logout(Request $request)
+    public function logout(Request $request): \Illuminate\Http\Response
     {
         Auth::guard('web')->logout();
         $request->session()->invalidate();
@@ -28,7 +28,7 @@ class AuthController extends Controller
         return response()->noContent();
     }
 
-    public function me(Request $request)
+    public function me(Request $request): \Illuminate\Http\JsonResponse
     {
         $user = $request->user();
         if (! $user) return response()->json(null, 204);

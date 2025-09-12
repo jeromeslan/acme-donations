@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Cache;
 
 class DonationController extends Controller
 {
-    public function store(Request $request, Campaign $campaign)
+    public function store(Request $request, Campaign $campaign): \Illuminate\Http\JsonResponse
     {
         $data = $request->validate(['amount' => 'required|numeric|min:1']);
         
@@ -35,14 +35,14 @@ class DonationController extends Controller
         return response()->json(['id' => $donation->id, 'correlation_id' => $correlationId], 202);
     }
 
-    public function myDonations(Request $request)
+    public function myDonations(Request $request): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
         $user = $request->user();
         $query = Donation::query()->with('campaign')->where('user_id', $user?->id)->orderByDesc('id');
         return $query->paginate(perPage: (int)$request->integer('per_page', 10));
     }
 
-    public function receipt(Donation $donation)
+    public function receipt(Donation $donation): \Illuminate\Http\JsonResponse
     {
         $receipt = DonationReceipt::where('donation_id', $donation->id)->firstOrFail();
         return response()->json($receipt);
