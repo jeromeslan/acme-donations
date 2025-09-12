@@ -481,15 +481,6 @@ body {
   transform: translateY(-2px);
 }
 
-.campaign-image {
-  width: 100%;
-  height: 200px;
-  background-color: var(--color-gray-200);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-gray-500);
-}
 
 .campaign-content {
   padding: var(--space-6);
