@@ -28,8 +28,8 @@
         </div>
       </div>
 
-      <!-- Featured Campaign Option -->
-      <div class="mb-3">
+      <!-- Featured Campaign Option (only for pending campaigns) -->
+      <div v-if="showActions" class="mb-3">
         <label class="flex items-center gap-2">
           <input
             v-model="isFeatured"
@@ -41,8 +41,8 @@
         <p class="text-xs text-gray-500 mt-1">Featured campaigns are highlighted on the homepage</p>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="flex items-center gap-2">
+      <!-- Action Buttons (only for pending campaigns) -->
+      <div v-if="showActions" class="flex items-center gap-2">
         <BaseButton
           variant="primary"
           size="sm"
@@ -72,9 +72,9 @@
     </div>
   </BaseCard>
 
-  <!-- Reject Modal -->
+  <!-- Reject Modal (only for pending campaigns) -->
   <Teleport to="body">
-    <div v-if="showRejectModal" class="modal-overlay" @click="closeRejectModal">
+    <div v-if="showActions && showRejectModal" class="modal-overlay" @click="closeRejectModal">
       <div class="modal-content" @click.stop>
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Reject Campaign</h3>
         <p class="text-gray-600 mb-4">Please provide a reason for rejecting this campaign:</p>
@@ -108,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, withDefaults } from 'vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 
@@ -130,9 +130,12 @@ interface Campaign {
 
 interface Props {
   campaign: Campaign
+  showActions?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  showActions: true
+})
 
 const emit = defineEmits<{
   approve: [campaignId: number, featured?: boolean]

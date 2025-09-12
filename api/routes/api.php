@@ -45,6 +45,7 @@ Route::get('/stats', [AdminController::class, 'publicStats']);
 Route::get('/admin/kpis', [AdminController::class, 'kpis'])->middleware('auth:sanctum');
 Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->middleware('auth:sanctum');
 Route::get('/admin/campaigns/pending', [AdminController::class, 'pendingCampaigns'])->middleware('auth:sanctum');
+Route::get('/admin/campaigns/all', [AdminController::class, 'allCampaigns'])->middleware('auth:sanctum');
 Route::post('/admin/campaigns/{id}/approve', [AdminController::class, 'approveCampaign'])->middleware('auth:sanctum');
 Route::post('/admin/campaigns/{id}/reject', [AdminController::class, 'rejectCampaign'])->middleware('auth:sanctum');
 

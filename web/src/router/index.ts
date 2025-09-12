@@ -33,6 +33,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../views/AdminView.vue'),
   },
   {
+    path: '/admin/campaigns',
+    name: 'admin-campaigns',
+    meta: { roles: ['admin'] },
+    component: () => import('../views/AdminCampaignsView.vue'),
+  },
+  {
     path: '/creator',
     name: 'creator',
     meta: { roles: ['creator'] },

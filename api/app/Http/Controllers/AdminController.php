@@ -185,6 +185,19 @@ class AdminController extends Controller
             'campaign' => $campaign
         ]);
     }
+
+    public function allCampaigns()
+    {
+        $campaigns = Campaign::query()
+            ->with(['category', 'creator:id,name,email'])
+            ->withCount('donations')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json([
+            'campaigns' => $campaigns
+        ]);
+    }
 }
 
 
