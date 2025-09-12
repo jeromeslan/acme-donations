@@ -1,74 +1,130 @@
-SHELL := /usr/bin/env bash
+# ACME Donations Platform - Development Commands
+# ================================================
 
-.PHONY: up down logs api.seed web.dev qa e2e build-prod up-prod seed-prod stop clean ps
- .PHONY: api.build web.build build web.types api.optimize api.migrate
+.PHONY: help build start stop restart logs test quality-check clean
 
-ps:
-	docker compose ps
+# Default target
+help: ## Show this help message
+	@echo "ACME Donations Platform - Development Commands"
+	@echo "=============================================="
+	@echo ""
+	@echo "Available commands:"
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-up:
-	docker compose --profile dev up -d --build
+# Build and start services
+build: ## Build and start all services
+	docker-compose --profile dev up -d --build
 
-down:
-	docker compose down -v
+start: ## Start all services
+	docker-compose --profile dev up -d
 
-logs:
-	docker compose logs -f --tail=200
+stop: ## Stop all services
+	docker-compose --profile dev down
 
-api.seed:
-	docker compose exec -T api-php sh -lc "php artisan migrate --force && php artisan db:seed --class=DemoSeeder --force"
+restart: ## Restart all services
+	docker-compose --profile dev restart
 
-web.dev:
-	docker compose --profile dev up -d web
+# Development commands
+logs: ## Show logs for all services
+	docker-compose logs -f
 
-qa:
-	# Backend QA
-	docker compose exec -T api-php sh -lc "php -v && php artisan --version || true && vendor/bin/phpstan analyse --no-progress --level=8 || true && vendor/bin/pest --colors=always || true"
-	# Frontend QA
-	docker compose run --rm web npm run lint -- --max-warnings=0 || true
-	docker compose run --rm web npm run type-check || true
-	docker compose run --rm web npm run test -- --run || true
-	# Generate API types
-	docker compose run --rm web npm run generate:types || true
+logs-api: ## Show API logs
+	docker-compose logs -f api-php
 
-e2e:
-	# Run Playwright e2e in web container
-	docker compose run --rm web npm run e2e
+logs-web: ## Show web logs
+	docker-compose logs -f web
 
-build-prod:
-	# Build web assets
-	docker compose run --rm web npm ci && docker compose run --rm web npm run build
+# Database commands
+migrate: ## Run database migrations
+	docker-compose exec api-php php artisan migrate
 
-up-prod:
-	docker compose --profile prod up -d --build
+seed: ## Seed the database
+	docker-compose exec api-php php artisan db:seed
 
-seed-prod:
-	docker compose exec -T api-php sh -lc "php artisan migrate --force && php artisan db:seed --class=DemoSeeder --force"
+fresh: ## Fresh migration and seed
+	docker-compose exec api-php php artisan migrate:fresh --seed
 
-stop:
-	docker compose stop
+# Testing commands
+test: ## Run all tests
+	docker-compose exec api-php ./vendor/bin/pest
 
-clean:
-	docker compose down -v --remove-orphans
+test-unit: ## Run unit tests
+	docker-compose exec api-php ./vendor/bin/pest tests/Unit/
 
-# Build without rebuilding Docker images
-api.build:
-	docker compose exec -T api-php sh -lc "export COMPOSER_MEMORY_LIMIT=-1 COMPOSER_PROCESS_TIMEOUT=1800; composer install --no-interaction --prefer-dist || composer update -W --no-interaction --prefer-dist; composer dump-autoload -o; php artisan optimize:clear || true; php artisan optimize || true"
+test-feature: ## Run feature tests
+	docker-compose exec api-php ./vendor/bin/pest tests/Feature/
 
-web.build:
-	docker compose run --rm web npm ci
-	docker compose run --rm web npm run build
+test-coverage: ## Run tests with coverage
+	docker-compose exec api-php ./vendor/bin/pest --coverage
 
-build: api.build web.build
+# Quality assurance
+phpstan: ## Run PHPStan static analysis
+	docker-compose exec api-php ./vendor/bin/phpstan analyse --level=8
 
-# Optional helpers
-web.types:
-	docker compose run --rm web npx openapi-typescript /app/shared/openapi/acme.yaml -o src/api/types.ts
+pint: ## Run Laravel Pint code formatting
+	docker-compose exec api-php ./vendor/bin/pint
 
-api.optimize:
-	docker compose exec -T api-php sh -lc "php artisan optimize:clear && php artisan optimize || true"
+quality-check: phpstan test ## Run all quality checks
 
-api.migrate:
-	docker compose exec -T api-php sh -lc "php artisan migrate --force"
+# Frontend commands
+web-test: ## Run frontend tests
+	docker-compose exec web npm run test
 
+web-e2e: ## Run E2E tests
+	docker-compose exec web npm run e2e
 
+web-build: ## Build frontend for production
+	docker-compose exec web npm run build
+
+web-lint: ## Run frontend linting
+	docker-compose exec web npm run lint
+
+# Cache and optimization
+clear-cache: ## Clear all caches
+	docker-compose exec api-php php artisan cache:clear
+	docker-compose exec api-php php artisan config:clear
+	docker-compose exec api-php php artisan route:clear
+	docker-compose exec api-php php artisan view:clear
+
+optimize: ## Optimize for production
+	docker-compose exec api-php php artisan config:cache
+	docker-compose exec api-php php artisan route:cache
+	docker-compose exec api-php php artisan view:cache
+
+# Cleanup commands
+clean: ## Clean up containers and volumes
+	docker-compose --profile dev down -v
+	docker system prune -f
+
+clean-all: ## Clean up everything including images
+	docker-compose --profile dev down -v --rmi all
+	docker system prune -af
+
+# Production commands
+prod-build: ## Build for production
+	docker-compose --profile prod up -d --build
+
+prod-start: ## Start production services
+	docker-compose --profile prod up -d
+
+# Development utilities
+shell-api: ## Open shell in API container
+	docker-compose exec api-php bash
+
+shell-web: ## Open shell in web container
+	docker-compose exec web sh
+
+install: ## Install dependencies
+	docker-compose exec api-php composer install
+	docker-compose exec web npm install
+
+# Quick development setup
+dev-setup: build migrate seed ## Complete development setup
+	@echo "✅ Development environment ready!"
+	@echo "🌐 Frontend: http://localhost:5173"
+	@echo "🔧 Backend: http://localhost:8080"
+	@echo "📚 API Docs: http://localhost:8080/api/documentation"
+
+# Status check
+status: ## Check service status
+	docker-compose ps
