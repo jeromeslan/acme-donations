@@ -26,6 +26,11 @@ The database design incorporates proper indexing, foreign key constraints, and m
 
 The platform implements comprehensive asynchronous processing through Laravel's queue system, handling donation processing, notification delivery, and cache management. This design ensures responsive user experiences while maintaining data consistency and system reliability. The queue architecture supports multiple drivers (database for development, Redis for production) and includes proper error handling, retry mechanisms, and monitoring capabilities.
 
+**Redis Integration for Queues and Caching:**
+Redis serves as the backbone for both queue processing and caching strategies. While the development environment uses database queues for simplicity (`QUEUE_CONNECTION=database`), the production-ready configuration supports Redis queues (`QUEUE_CONNECTION=redis`) for enhanced performance and scalability. The `ProcessDonationJob` demonstrates sophisticated queue implementation with automatic retry mechanisms (3 attempts with exponential backoff: 10, 30, 60 seconds), comprehensive error handling, and cache invalidation strategies.
+
+Redis caching is extensively utilized for campaign listings, user sessions, and computed statistics, with intelligent cache invalidation triggered by CRUD operations. The job system includes proper cache management, automatically clearing Redis cache tags (`campaigns`, `campaign:{id}`) when donation processing completes, ensuring data consistency across the application.
+
 Background job processing enables the system to handle high-volume donation processing without blocking user interactions, while maintaining audit trails and providing real-time status updates. This architectural decision demonstrates understanding of modern web application requirements for scalability and user experience.
 
 #### Authentication and Security: Laravel Sanctum
