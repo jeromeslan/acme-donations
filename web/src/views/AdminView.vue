@@ -10,13 +10,7 @@
           <p class="text-gray-600">Manage campaigns, donations, and platform statistics</p>
         </div>
 
-        <!-- Notifications -->
-        <BaseAlert
-          v-if="notification.show"
-          :type="notification.type"
-          :message="notification.message"
-          @dismiss="dismissNotification"
-        />
+        <!-- Notifications are now handled by toast system -->
 
         <!-- Stats Grid -->
         <div class="dashboard-grid mb-12">
@@ -133,21 +127,18 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useToast } from 'vue-toastification'
 import { api } from '@/api/client'
 import AppNavbar from '@/components/layout/AppNavbar.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseAlert from '@/components/ui/BaseAlert.vue'
 import AdminCampaignCard from '@/components/AdminCampaignCard.vue'
 
+const toast = useToast()
 const loading = ref(false)
 const stats = ref({})
 const pendingCampaigns = ref([])
 const recentActivity = ref([])
-const notification = ref({
-  show: false,
-  type: 'info' as 'success' | 'error' | 'warning' | 'info',
-  message: ''
-})
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -189,35 +180,33 @@ const fetchDashboardData = async () => {
   }
 }
 
-const showNotification = (type: 'success' | 'error' | 'warning' | 'info', message: string) => {
-  notification.value = { show: true, type, message }
-}
-
-const dismissNotification = () => {
-  notification.value.show = false
-}
+// Notifications now handled by toast system
 
 const handleApproveCampaign = async (campaignId: number) => {
   try {
     await api.post(`/api/admin/campaigns/${campaignId}/approve`)
-    showNotification('success', 'Campaign approved successfully! It is now published and visible to all users.')
+    toast.success('Campaign approved successfully! It is now published and visible to all users. ✅', {
+      timeout: 5000
+    })
     // Refresh data
     await fetchDashboardData()
   } catch (error) {
     console.error('Error approving campaign:', error)
-    showNotification('error', 'Failed to approve campaign. Please try again.')
+    toast.error('Failed to approve campaign. Please try again.')
   }
 }
 
 const handleRejectCampaign = async (campaignId: number, reason?: string) => {
   try {
     await api.post(`/api/admin/campaigns/${campaignId}/reject`, { reason })
-    showNotification('success', 'Campaign rejected successfully.')
+    toast.success('Campaign rejected successfully. The creator has been notified. 🚫', {
+      timeout: 4000
+    })
     // Refresh data
     await fetchDashboardData()
   } catch (error) {
     console.error('Error rejecting campaign:', error)
-    showNotification('error', 'Failed to reject campaign. Please try again.')
+    toast.error('Failed to reject campaign. Please try again.')
   }
 }
 

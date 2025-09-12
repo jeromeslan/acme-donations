@@ -78,6 +78,7 @@
             variant="danger"
             @click="handleReject"
             :loading="loading"
+            class="reject-button"
           >
             Reject Campaign
           </BaseButton>
@@ -184,19 +185,25 @@ const handleReject = () => {
 .max-w-md { max-width: 28rem; }
 .mx-4 { margin-left: 1rem; margin-right: 1rem; }
 
-/* Custom hover style for reject button */
+/* Custom hover style for reject button - Override BaseButton styles */
 .reject-button:hover {
   background-color: #f97316 !important; /* Orange-500 */
   border-color: #f97316 !important;
   color: white !important;
   transform: translateY(-1px);
   transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
 }
 
 .reject-button:active {
   background-color: #ea580c !important; /* Orange-600 */
   border-color: #ea580c !important;
+  color: white !important;
   transform: translateY(0);
+}
+
+.reject-button:focus {
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.5) !important;
 }
 
 /* Modal styles */
