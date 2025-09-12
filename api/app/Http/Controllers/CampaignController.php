@@ -82,6 +82,16 @@ class CampaignController extends Controller
 
     public function update(Request $request, Campaign $campaign)
     {
+        // Ensure only the creator can update their campaign
+        if ($campaign->creator_id !== $request->user()->id) {
+            return response()->json(['message' => 'Unauthorized to update this campaign.'], 403);
+        }
+
+        // Only allow updates if campaign is in draft or pending status
+        if (!in_array($campaign->status, ['draft', 'pending'])) {
+            return response()->json(['message' => 'Cannot update campaign with current status.'], 422);
+        }
+
         $data = $request->validate([
             'title' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
@@ -90,6 +100,7 @@ class CampaignController extends Controller
             'featured' => 'boolean',
             'status' => 'sometimes|in:draft,pending,active,completed,archived',
         ]);
+        
         $campaign->update($data);
         Cache::store('redis')->tags(["campaign:{$campaign->id}", 'campaigns'])->flush();
         return response()->json($campaign);

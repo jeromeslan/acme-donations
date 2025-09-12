@@ -6,8 +6,20 @@
       <div class="container-sm">
         <!-- Page Header -->
         <div class="text-center mb-8">
-          <h1 class="text-3xl font-bold text-gray-900 mb-2">Create New Campaign</h1>
-          <p class="text-gray-600">Fill in the details for your charitable campaign</p>
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            {{ draftCampaignId ? 'Edit Campaign Draft' : 'Create New Campaign' }}
+          </h1>
+          <p class="text-gray-600">
+            {{ draftCampaignId 
+              ? 'Update your draft campaign and submit for review when ready' 
+              : 'Fill in the details for your charitable campaign' 
+            }}
+          </p>
+          <div v-if="draftCampaignId" class="mt-2">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+              📝 Editing Draft
+            </span>
+          </div>
         </div>
 
         <!-- Success messages are now handled by toast notifications -->
@@ -91,24 +103,35 @@
             </BaseAlert>
 
             <!-- Form Actions -->
-            <div class="flex items-center gap-4 pt-6 border-t border-gray-200">
+            <div class="flex items-center justify-between gap-4 pt-6 border-t border-gray-200">
               <BaseButton
+                v-if="draftCampaignId"
+                @click="startNewCampaign"
+                variant="outline"
                 type="button"
-                variant="secondary"
-                @click="saveAsDraft"
-                :loading="loading"
               >
-                Save as Draft
+                Start New Campaign
               </BaseButton>
+              <div v-else></div>
+              
+              <div class="flex gap-4">
+                <BaseButton
+                  type="button"
+                  variant="secondary"
+                  @click="saveAsDraft"
+                  :loading="loading"
+                >
+                  {{ draftCampaignId ? 'Update Draft' : 'Save as Draft' }}
+                </BaseButton>
 
-              <BaseButton
-                type="submit"
-                variant="primary"
-                :loading="loading"
-                class="flex-1"
-              >
-                Submit for Review
-              </BaseButton>
+                <BaseButton
+                  type="submit"
+                  variant="primary"
+                  :loading="loading"
+                >
+                  Submit for Review
+                </BaseButton>
+              </div>
             </div>
           </form>
         </BaseCard>
@@ -144,6 +167,9 @@ const form = reactive({
   category_id: '',
   featured: false
 })
+
+// Track the draft campaign ID if exists
+const draftCampaignId = ref<number | null>(null)
 
 // Form validation setup
 const { errors: validationErrors, validate, validateSingle, clearErrors: clearValidationErrors } = useFormValidation({
@@ -184,6 +210,7 @@ const resetForm = () => {
     }
   })
   clearValidationErrors()
+  draftCampaignId.value = null
 }
 
 const clearSuccessMessage = () => {
@@ -194,6 +221,13 @@ const clearSuccessMessage = () => {
 
 const saveAsDraft = async () => {
   await submitCampaign('draft')
+}
+
+const startNewCampaign = () => {
+  resetForm()
+  toast.info('Started new campaign. Previous draft is saved.', {
+    timeout: 3000
+  })
 }
 
 const handleSubmit = async () => {
@@ -217,7 +251,20 @@ const submitCampaign = async (status: 'draft' | 'pending') => {
       goal_amount: parseFloat(form.goal_amount.toString())
     }
 
-    const response = await api.post('/api/campaigns', campaignData)
+    let response
+    
+    // If we have a draft ID, update the existing campaign
+    if (draftCampaignId.value) {
+      response = await api.put(`/api/campaigns/${draftCampaignId.value}`, campaignData)
+    } else {
+      // Create new campaign
+      response = await api.post('/api/campaigns', campaignData)
+    }
+
+    // Store draft ID for future updates
+    if (status === 'draft' && response.data.id) {
+      draftCampaignId.value = response.data.id
+    }
 
     // Show success notifications
     if (status === 'draft') {
