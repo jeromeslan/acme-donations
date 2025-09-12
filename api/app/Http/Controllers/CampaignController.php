@@ -21,6 +21,9 @@ class CampaignController extends Controller
             ->when($request->filled('status'), function ($query) use ($request) {
                 $value = (string)$request->query('status');
                 return $query->where('status', $value);
+            }, function ($query) {
+                // Default: only show active campaigns for public access
+                return $query->where('status', 'active');
             })
             ->when($request->filled('category_id'), function ($query) use ($request) {
                 $value = (int)$request->query('category_id');
