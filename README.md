@@ -8,11 +8,91 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript)](https://typescriptlang.org)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker)](https://docker.com)
 
+## 🚀 Quick Start (TL;DR)
+
+### Prerequisites
+- **Docker & Docker Compose** (latest version)
+- **Git** (for cloning the repository)
+
+### One-Command Setup
+
+```bash
+# 1. Clone the repository
+git clone <repository-url> acme-donations
+cd acme-donations
+
+# 2. Start everything with database seeding (choose your platform)
+
+# Windows (PowerShell)
+.\scripts\dev.ps1 dev-setup
+
+# Linux/Mac (Make)
+make dev-setup
+
+# Or manually with Docker Compose
+docker-compose --profile dev up -d --build
+docker-compose exec api-php php artisan migrate
+docker-compose exec api-php php artisan db:seed
+```
+
+### 🎭 Demo Accounts (Auto-created)
+- **Admin**: `admin@acme.com` / `password`
+- **Creator**: `creator@acme.com` / `password`  
+- **User**: `user@acme.com` / `password`
+
+### 🌐 Access URLs
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:8080
+- **API Documentation**: http://localhost:8080/api/documentation
+
+### 🧪 Quick Testing
+```bash
+# Run all tests
+.\scripts\dev.ps1 test          # Windows
+make test                       # Linux/Mac
+
+# Run static analysis
+.\scripts\dev.ps1 phpstan       # Windows  
+make phpstan                    # Linux/Mac
+```
+
+### 🔧 Troubleshooting
+
+**Services not starting?**
+```bash
+# Check service status
+.\scripts\dev.ps1 status        # Windows
+make status                     # Linux/Mac
+
+# View logs
+.\scripts\dev.ps1 logs          # Windows
+make logs                       # Linux/Mac
+```
+
+**Database issues?**
+```bash
+# Reset database completely
+.\scripts\dev.ps1 fresh         # Windows
+make fresh                      # Linux/Mac
+```
+
+**Port conflicts?**
+- Frontend (5173): Change in `docker-compose.yml` and `web/package.json`
+- Backend (8080): Change in `docker-compose.yml` and `api/.env`
+
+**502 Bad Gateway?**
+```bash
+# Restart API services
+.\scripts\dev.ps1 restart       # Windows
+make restart                    # Linux/Mac
+```
+
+---
+
 ## 📋 Table of Contents
 
 - [🎯 Overview](#-overview)
 - [🏗️ Architecture](#️-architecture)
-- [🚀 Quick Start](#-quick-start)
 - [📁 Project Structure](#-project-structure)
 - [🔧 Technology Stack](#-technology-stack)
 - [🧪 Testing](#-testing)
@@ -76,43 +156,6 @@ The backend follows a **modular architecture** using `nwidart/laravel-modules` f
 - **Type Generation**: Automatic TypeScript types from OpenAPI specs
 - **Contract-Driven Development**: Frontend and backend communicate via well-defined contracts
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- **Docker & Docker Compose** (latest version)
-- **Git** (for cloning the repository)
-
-### 🏃‍♂️ One-Command Setup
-
-```bash
-# Clone the repository
-git clone <repository-url> acme-donations
-cd acme-donations
-
-# Option 1: Using Docker Compose directly
-docker-compose --profile dev up -d --build
-
-# Option 2: Using PowerShell script (Windows)
-.\scripts\dev.ps1 dev-setup
-
-# Option 3: Using Make (Linux/Mac)
-make dev-setup
-
-# Wait for services to be ready (30-60 seconds)
-# Access the application:
-# - Frontend: http://localhost:5173
-# - Backend API: http://localhost:8080
-# - API Documentation: http://localhost:8080/api/documentation
-```
-
-### 🎭 Demo Accounts
-
-After the first run, demo accounts are automatically created:
-
-- **Admin**: `admin@acme.com` / `password`
-- **Creator**: `creator@acme.com` / `password`
-- **User**: `user@acme.com` / `password`
 
 ## 📁 Project Structure
 
