@@ -1,4 +1,5 @@
 # ACME Donations Platform
+https://github.com/jeromeslan/acme-donations
 
 A modern, full-stack charitable donation platform built with Laravel 12.x and Vue.js 3.5.x, designed for scalability and maintainability.
 
