@@ -116,8 +116,13 @@
           <BaseButton @click="closeModal" variant="secondary" size="sm">
             Close
           </BaseButton>
-          <BaseButton @click="startDonation" variant="primary" size="sm">
-            Donate Now
+          <BaseButton 
+            @click="startDonation" 
+            variant="primary" 
+            size="sm"
+            :disabled="campaignData.status !== 'active'"
+          >
+            {{ campaignData.status === 'active' ? 'Donate Now' : 'Campaign Not Active' }}
           </BaseButton>
         </div>
       </div>
@@ -187,6 +192,11 @@ const closeDonationModal = () => {
 }
 
 const startDonation = () => {
+  // Only allow donations for active campaigns
+  if (campaignData.value.status !== 'active') {
+    return
+  }
+  
   showModal.value = false // Close campaign details modal
   showDonationModal.value = true // Open donation modal
 }

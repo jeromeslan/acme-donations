@@ -279,7 +279,7 @@ const submitCampaign = async (status: 'draft' | 'pending') => {
       // Reset form and redirect for submission
       resetForm()
       setTimeout(() => {
-        router.push('/')
+        router.push('/?refresh=campaigns')
       }, 1000)
     }
 

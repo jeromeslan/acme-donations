@@ -41,6 +41,12 @@
         </div>
       </section>
 
+      <!-- My Campaigns -->
+      <MyCampaigns 
+        v-if="!isAdmin && myCampaigns.length > 0" 
+        :campaigns="myCampaigns" 
+      />
+
       <!-- Featured Campaigns -->
       <section v-if="featuredCampaigns.length > 0" class="py-16">
         <div class="container">
@@ -106,17 +112,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { api } from '@/api/client'
 import AppNavbar from '@/components/layout/AppNavbar.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import CampaignCard from '@/components/CampaignCard.vue'
+import MyCampaigns from '@/components/MyCampaigns.vue'
 
 const auth = useAuthStore()
+const route = useRoute()
+const router = useRouter()
 const loading = ref(false)
 const campaigns = ref([])
 const featuredCampaigns = ref([])
+const myCampaigns = ref([])
 const globalStats = ref({
   totalRaised: 0,
   totalCampaigns: 0,
@@ -166,12 +177,36 @@ const fetchGlobalStats = async () => {
   }
 }
 
+const fetchMyCampaigns = async () => {
+  if (!auth.user) return
+  
+  try {
+    const response = await api.get('/api/me/campaigns')
+    myCampaigns.value = response.data.campaigns || []
+  } catch (error) {
+    console.error('Error fetching my campaigns:', error)
+    myCampaigns.value = []
+  }
+}
+
 onMounted(async () => {
   await Promise.all([
     fetchCampaigns(),
     fetchFeaturedCampaigns(),
-    fetchGlobalStats()
+    fetchGlobalStats(),
+    fetchMyCampaigns()
   ])
+})
+
+// Watch for refresh parameter to reload campaigns
+watch(() => route.query.refresh, (newValue) => {
+  if (newValue === 'campaigns') {
+    fetchMyCampaigns()
+    // Clear the parameter from URL
+    const newQuery = { ...route.query }
+    delete newQuery.refresh
+    router.replace({ query: newQuery })
+  }
 })
 </script>
 

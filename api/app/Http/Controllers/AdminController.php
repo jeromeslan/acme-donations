@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Donation, Campaign, User};
+use App\Models\{Donation, Campaign, User, Notification};
 use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
@@ -84,36 +84,7 @@ class AdminController extends Controller
         ]);
     }
 
-    public function approveCampaign($id)
-    {
-        $campaign = Campaign::findOrFail($id);
-        
-        $campaign->update([
-            'status' => 'active', // Use 'active' instead of 'published'
-            'published_at' => now()
-        ]);
 
-        return response()->json([
-            'message' => 'Campaign approved successfully',
-            'campaign' => $campaign
-        ]);
-    }
-
-    public function rejectCampaign($id)
-    {
-        $campaign = Campaign::findOrFail($id);
-        
-        $reason = request('reason', '');
-        
-        $campaign->update([
-            'status' => 'archived' // Use 'archived' instead of 'rejected' for now
-        ]);
-
-        return response()->json([
-            'message' => 'Campaign rejected successfully',
-            'campaign' => $campaign
-        ]);
-    }
 
     public function pendingCampaigns()
     {
@@ -150,6 +121,60 @@ class AdminController extends Controller
             'archived' => 'rejected',
             default => 'created'
         };
+    }
+
+    public function approveCampaign($id)
+    {
+        $campaign = Campaign::findOrFail($id);
+        $campaign->update(['status' => 'active']);
+
+        // Create notification for campaign creator
+        Notification::create([
+            'user_id' => $campaign->creator_id,
+            'campaign_id' => $campaign->id,
+            'type' => 'campaign_approved',
+            'title' => 'Campaign Approved! 🎉',
+            'message' => "Your campaign '{$campaign->title}' has been approved and is now live! Users can start donating to support your cause.",
+            'data' => [
+                'campaign_title' => $campaign->title,
+                'campaign_id' => $campaign->id
+            ]
+        ]);
+
+        return response()->json([
+            'message' => 'Campaign approved successfully',
+            'campaign' => $campaign
+        ]);
+    }
+
+    public function rejectCampaign($id)
+    {
+        $campaign = Campaign::findOrFail($id);
+        $reason = request('reason', 'No reason provided');
+        
+        $campaign->update([
+            'status' => 'archived',
+            'rejection_reason' => $reason
+        ]);
+
+        // Create notification for campaign creator
+        Notification::create([
+            'user_id' => $campaign->creator_id,
+            'campaign_id' => $campaign->id,
+            'type' => 'campaign_rejected',
+            'title' => 'Campaign Needs Updates',
+            'message' => "Your campaign '{$campaign->title}' needs some updates before it can go live. Please review the feedback and resubmit.",
+            'data' => [
+                'campaign_title' => $campaign->title,
+                'campaign_id' => $campaign->id,
+                'rejection_reason' => $reason
+            ]
+        ]);
+
+        return response()->json([
+            'message' => 'Campaign rejected successfully',
+            'campaign' => $campaign
+        ]);
     }
 }
 

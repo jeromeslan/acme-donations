@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\{AuthController, CampaignController, DonationController, AdminController};
+use App\Http\Controllers\{AuthController, CampaignController, DonationController, AdminController, NotificationController};
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -29,6 +29,14 @@ Route::delete('/campaigns/{campaign}', [CampaignController::class, 'destroy'])->
 Route::post('/campaigns/{campaign}/donations', [DonationController::class, 'store']);
 Route::get('/me/donations', [DonationController::class, 'myDonations'])->middleware('auth:sanctum');
 Route::get('/donations/{donation}/receipt', [DonationController::class, 'receipt'])->middleware('auth:sanctum');
+
+// User notifications
+Route::get('/me/notifications', [NotificationController::class, 'index'])->middleware('auth:sanctum');
+Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->middleware('auth:sanctum');
+Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->middleware('auth:sanctum');
+
+// User campaigns
+Route::get('/me/campaigns', [CampaignController::class, 'myCampaigns'])->middleware('auth:sanctum');
 
 // Public stats endpoint
 Route::get('/stats', [AdminController::class, 'publicStats']);

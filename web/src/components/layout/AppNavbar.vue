@@ -33,6 +33,11 @@
             </router-link>
           </li>
 
+          <!-- Notifications -->
+          <li>
+            <NotificationBell ref="notificationBell" />
+          </li>
+
           <!-- User Menu -->
           <li class="user-menu-container">
             <button 
@@ -83,6 +88,7 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import NotificationBell from '@/components/NotificationBell.vue'
 
 const auth = useAuthStore()
 const router = useRouter()

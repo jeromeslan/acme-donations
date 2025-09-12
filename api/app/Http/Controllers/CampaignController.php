@@ -112,6 +112,20 @@ class CampaignController extends Controller
         Cache::store('redis')->tags(["campaign:{$campaign->id}", 'campaigns'])->flush();
         return response()->noContent();
     }
+
+    public function myCampaigns(Request $request)
+    {
+        $campaigns = Campaign::query()
+            ->where('creator_id', $request->user()->id)
+            ->with('category')
+            ->withCount('donations')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json([
+            'campaigns' => $campaigns
+        ]);
+    }
 }
 
 
