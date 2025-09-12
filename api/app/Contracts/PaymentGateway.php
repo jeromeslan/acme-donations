@@ -7,16 +7,16 @@ interface PaymentGateway
     /**
      * Process a payment
      *
-     * @param array $data
-     * @return array
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
      */
     public function processPayment(array $data): array;
 
     /**
      * Handle webhook from payment provider
      *
-     * @param array $data
-     * @return array
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
      */
     public function handleWebhook(array $data): array;
 
@@ -25,7 +25,7 @@ interface PaymentGateway
      *
      * @param string $transactionId
      * @param float $amount
-     * @return array
+     * @return array<string, mixed>
      */
     public function refund(string $transactionId, float $amount): array;
 }

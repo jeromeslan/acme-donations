@@ -47,12 +47,12 @@ class User extends Authenticatable
         ];
     }
 
-    public function notifications()
+    public function notifications(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Notification::class);
     }
 
-    public function campaigns()
+    public function campaigns(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Campaign::class, 'creator_id');
     }

@@ -6,6 +6,10 @@ use App\Contracts\PaymentGateway;
 
 class MockPaymentGateway implements PaymentGateway
 {
+    /**
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
     public function processPayment(array $data): array
     {
         // Simulate payment processing delay
@@ -27,6 +31,10 @@ class MockPaymentGateway implements PaymentGateway
         }
     }
 
+    /**
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
     public function handleWebhook(array $data): array
     {
         // Mock webhook handling
@@ -38,6 +46,9 @@ class MockPaymentGateway implements PaymentGateway
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function refund(string $transactionId, float $amount): array
     {
         // Simulate refund processing

@@ -39,12 +39,12 @@ class Notification extends Model
         }
     }
 
-    public function scopeUnread($query)
+    public function scopeUnread(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->whereNull('read_at');
     }
 
-    public function scopeForUser($query, int $userId)
+    public function scopeForUser(\Illuminate\Database\Eloquent\Builder $query, int $userId): \Illuminate\Database\Eloquent\Builder
     {
         return $query->where('user_id', $userId);
     }
