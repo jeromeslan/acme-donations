@@ -1,96 +1,373 @@
-# 🎯 ACME Donations Platform
+# ACME Donations Platform
 
-> **A modern, scalable charitable donation platform built with Laravel 12, Vue 3, and Docker**
+A modern, full-stack charitable donation platform built with Laravel 12.x and Vue.js 3.5.x, designed for scalability and maintainability.
 
-[![PHP 8.4](https://img.shields.io/badge/PHP-8.4-777BB4?style=flat-square&logo=php)](https://php.net)
-[![Laravel 12](https://img.shields.io/badge/Laravel-12.x-FF2D20?style=flat-square&logo=laravel)](https://laravel.com)
-[![Vue 3](https://img.shields.io/badge/Vue-3.5.x-4FC08D?style=flat-square&logo=vue.js)](https://vuejs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript)](https://typescriptlang.org)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker)](https://docker.com)
-
-## 🚀 Quick Start (TL;DR)
+## 🚀 Quick Start
 
 ### Prerequisites
-- **Docker & Docker Compose** (latest version)
-- **Git** (for cloning the repository)
+- Docker & Docker Compose
+- Git
 
 ### One-Command Setup
 
-```bash
-# 1. Clone the repository
-git clone <repository-url> acme-donations
-cd acme-donations
-
-# 2. Start everything with database seeding (choose your platform)
-
-# Windows (PowerShell) - RECOMMANDÉ (évite les 502 Bad Gateway)
+**Windows (PowerShell):**
+```powershell
 .\scripts\start-dev.ps1
-
-# Linux/Mac (Make)
-make dev-setup
-
-# Linux/Mac (Script)
-chmod +x scripts/start-dev.sh
-./scripts/start-dev.sh
-
-# Or manually with Docker Compose (si les scripts ne fonctionnent pas)
-docker-compose --profile dev up -d --build
-docker-compose exec api-php php artisan migrate
-docker-compose exec api-php php artisan db:seed
 ```
+
+**Linux/Mac:**
+```bash
+./scripts/start-dev.sh
+```
+
+**Alternative (Make):**
+```bash
+make dev-setup
+```
+
+### Access URLs
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:8080
+- **API Documentation**: http://localhost:8080/api/documentation
 
 ### 🎭 Demo Accounts (Auto-created)
 - **Admin**: `admin@acme.test` / `password`
 - **Creator**: `creator@acme.test` / `password`  
 - **User**: `user@acme.test` / `password`
 
-### 🌐 Access URLs
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:8080
-- **API Documentation**: http://localhost:8080/api/documentation
+## 🏗️ Project Structure
 
-### 🧪 Quick Testing
-```bash
-# Run all tests
-.\scripts\dev.ps1 test          # Windows
-make test                       # Linux/Mac
-
-# Run static analysis
-.\scripts\dev.ps1 phpstan       # Windows  
-make phpstan                    # Linux/Mac
+```
+acme-donations/
+├── api/                    # Laravel 12.x Backend
+│   ├── app/
+│   │   ├── Http/Controllers/    # API Controllers
+│   │   ├── Models/             # Eloquent Models
+│   │   ├── Jobs/               # Background Jobs
+│   │   ├── Services/           # Business Logic
+│   │   └── Contracts/          # Interfaces
+│   ├── database/
+│   │   ├── migrations/         # Database Schema
+│   │   ├── seeders/           # Demo Data
+│   │   └── factories/         # Test Data
+│   └── tests/                 # Pest Tests
+├── web/                     # Vue.js 3.5.x Frontend
+│   ├── src/
+│   │   ├── components/        # Vue Components
+│   │   ├── views/            # Page Components
+│   │   ├── stores/           # Pinia State Management
+│   │   └── api/              # API Client
+│   └── public/
+└── shared/                  # Shared Resources
+    └── openapi/             # API Specifications
 ```
 
-### 🔧 Troubleshooting
+## 🛠️ Technology Stack
+
+### Backend (Laravel 12.x)
+- **PHP 8.4** - Latest PHP version
+- **Laravel 12.x** - Modern web framework
+- **Laravel Sanctum** - SPA authentication with secure cookies
+- **Spatie Laravel Permission** - Role-based access control
+- **Redis 7.x** - Caching, sessions, and queue driver
+- **SQLite** - Development database (PostgreSQL ready)
+- **Laravel Horizon** - Queue monitoring (optional)
+
+### Frontend (Vue.js 3.5.x)
+- **Vue 3.5.x** - Progressive JavaScript framework
+- **TypeScript** - Type-safe development
+- **Vite** - Fast build tool
+- **Pinia** - State management
+- **Vue Router** - Client-side routing
+- **Tailwind CSS 4.1.x** - Utility-first CSS
+- **Vue Toastification** - Modern notifications
+- **Axios** - HTTP client
+
+### Development & Quality
+- **Docker & Docker Compose** - Containerized development
+- **PHPStan Level 8** - Static analysis
+- **Pest 3.x** - PHP testing framework
+- **Vitest** - Frontend testing
+- **Playwright** - E2E testing
+- **ESLint & Prettier** - Code formatting
+
+## 🔧 Development Commands
+
+### Backend (Laravel)
+```bash
+# Run PHPStan static analysis
+docker-compose exec api-php ./vendor/bin/phpstan analyse --level=8
+
+# Run Pest tests
+docker-compose exec api-php ./vendor/bin/pest
+
+# Run migrations
+docker-compose exec api-php php artisan migrate
+
+# Seed demo data
+docker-compose exec api-php php artisan db:seed
+
+# Create demo users
+docker-compose exec api-php php artisan db:seed --class=UserSeeder
+
+# Clear cache
+docker-compose exec api-php php artisan cache:clear
+```
+
+### Frontend (Vue.js)
+```bash
+# Install dependencies
+docker-compose exec web npm install
+
+# Run development server
+docker-compose exec web npm run dev
+
+# Build for production
+docker-compose exec web npm run build
+
+# Run tests
+docker-compose exec web npm run test
+
+# Run linting
+docker-compose exec web npm run lint
+```
+
+### Docker Commands
+```bash
+# Start all services
+docker-compose up -d
+
+# Stop all services
+docker-compose down
+
+# Rebuild containers
+docker-compose build --no-cache
+
+# View logs
+docker-compose logs -f [service-name]
+
+# Execute commands in containers
+docker-compose exec [service-name] [command]
+```
+
+## 🧪 Testing
+
+### Backend Testing (Pest)
+```bash
+# Run all tests
+docker-compose exec api-php ./vendor/bin/pest
+
+# Run specific test file
+docker-compose exec api-php ./vendor/bin/pest tests/Feature/CampaignControllerTest.php
+
+# Run with coverage
+docker-compose exec api-php ./vendor/bin/pest --coverage
+```
+
+### Frontend Testing (Vitest)
+```bash
+# Run unit tests
+docker-compose exec web npm run test
+
+# Run tests with coverage
+docker-compose exec web npm run test:coverage
+```
+
+### E2E Testing (Playwright)
+```bash
+# Run E2E tests
+docker-compose exec web npm run test:e2e
+
+# Run E2E tests in headed mode
+docker-compose exec web npm run test:e2e:headed
+```
+
+## 🔍 Quality Assurance
+
+### Static Analysis
+```bash
+# PHPStan Level 8
+docker-compose exec api-php ./vendor/bin/phpstan analyse --level=8
+
+# ESLint (Frontend)
+docker-compose exec web npm run lint
+
+# TypeScript check
+docker-compose exec web npm run type-check
+```
+
+### Code Formatting
+```bash
+# PHP (Laravel Pint)
+docker-compose exec api-php ./vendor/bin/pint
+
+# JavaScript/TypeScript (Prettier)
+docker-compose exec web npm run format
+```
+
+## 🔐 Security Features
+
+### Authentication & Authorization
+- **Laravel Sanctum** - SPA authentication with secure cookies
+- **CSRF Protection** - Cross-site request forgery prevention
+- **Role-based Access Control** - Admin, Creator, User roles
+- **Secure Cookies** - HttpOnly, Secure, SameSite attributes
+
+### Data Protection
+- **Input Validation** - Server-side validation for all inputs
+- **SQL Injection Prevention** - Eloquent ORM with parameterized queries
+- **XSS Protection** - Output escaping and sanitization
+- **Rate Limiting** - API rate limiting middleware
+
+### Environment Security
+- **Environment Variables** - No secrets in code
+- **Database Security** - Prepared statements and migrations
+- **File Permissions** - Proper file system permissions
+- **Docker Security** - Container isolation
+
+## ⚡ Performance & Scalability
+
+### Caching Strategy
+- **Redis Caching** - Campaign listings and statistics
+- **Cache Invalidation** - Event-driven cache clearing
+- **TTL Management** - Explicit cache expiration
+- **Cache Warming** - Background cache preheating
+
+### Database Optimization
+- **Eloquent Relationships** - Optimized queries with eager loading
+- **Database Indexing** - Strategic indexes for performance
+- **Query Optimization** - Efficient database queries
+- **Connection Pooling** - Database connection management
+
+### Frontend Performance
+- **Code Splitting** - Route-based code splitting
+- **Lazy Loading** - Component lazy loading
+- **Image Optimization** - Responsive images with modern formats
+- **Bundle Optimization** - Tree shaking and minification
+
+### Queue Processing
+- **Asynchronous Jobs** - Background donation processing
+- **Queue Monitoring** - Laravel Horizon integration
+- **Job Retry Logic** - Exponential backoff for failed jobs
+- **Queue Scaling** - Multiple worker processes
+
+## 🔄 Development Workflow
+
+### Git Workflow
+```bash
+# Create feature branch
+git checkout -b feature/new-feature
+
+# Make changes and commit
+git add .
+git commit -m "feat: add new feature"
+
+# Push and create PR
+git push origin feature/new-feature
+```
+
+### Code Review Checklist
+- [ ] PHPStan Level 8 passes
+- [ ] All tests pass
+- [ ] Code follows PSR-12 standards
+- [ ] Frontend follows ESLint rules
+- [ ] Security best practices followed
+- [ ] Performance considerations addressed
+
+### Deployment Process
+1. **Code Review** - Peer review and approval
+2. **Testing** - Automated tests pass
+3. **Static Analysis** - PHPStan and ESLint pass
+4. **Build** - Production build created
+5. **Deploy** - Deploy to staging/production
+6. **Monitor** - Monitor application health
+
+## 📚 API Documentation
+
+### OpenAPI Specification
+The API is documented using OpenAPI 3.0 specification located in `shared/openapi/acme.yaml`.
+
+### Key Endpoints
+
+#### Authentication
+- `POST /api/login` - User login
+- `POST /api/logout` - User logout
+- `GET /api/me` - Get current user
+
+#### Campaigns
+- `GET /api/campaigns` - List campaigns
+- `GET /api/campaigns/featured` - Featured campaigns
+- `GET /api/campaigns/{id}` - Campaign details
+- `POST /api/campaigns` - Create campaign
+- `PUT /api/campaigns/{id}` - Update campaign
+
+#### Donations
+- `POST /api/campaigns/{id}/donations` - Make donation
+- `GET /api/donations/my` - User's donations
+- `GET /api/donations/{id}/receipt` - Donation receipt
+
+#### Admin
+- `GET /api/admin/dashboard` - Admin dashboard
+- `POST /api/admin/campaigns/{id}/approve` - Approve campaign
+- `POST /api/admin/campaigns/{id}/reject` - Reject campaign
+
+### API Client Generation
+```bash
+# Generate TypeScript client from OpenAPI spec
+docker-compose exec web npm run generate-api-client
+```
+
+## 🐳 Docker Configuration
+
+### Services
+- **api-php** - PHP-FPM 8.4 with Laravel
+- **api-nginx** - Nginx web server
+- **web** - Node.js 20 LTS with Vue.js
+- **redis** - Redis 7.x for caching
+- **queue-worker** - Laravel queue worker
+
+### Environment Variables
+```bash
+# Database
+DB_CONNECTION=sqlite
+DB_DATABASE=database/database.sqlite
+
+# Cache & Sessions
+CACHE_DRIVER=redis
+SESSION_DRIVER=redis
+QUEUE_CONNECTION=database
+
+# Application
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8080
+```
+
+### Health Checks
+- **API Health**: `GET /health`
+- **Database**: Connection and migrations status
+- **Redis**: Cache and session connectivity
+- **Queues**: Queue worker status
+
+## 🚨 Troubleshooting
+
+### Common Issues
 
 #### 502 Bad Gateway Error
-Si vous obtenez une erreur 502 Bad Gateway, utilisez le script de démarrage robuste :
+If you get a 502 Bad Gateway error, use the robust startup script:
 
 ```bash
-# Windows (RECOMMANDÉ)
+# Windows (RECOMMENDED)
 .\scripts\start-dev.ps1
 
 # Linux/Mac
 ./scripts/start-dev.sh
 ```
 
-Ce script démarre les services dans le bon ordre et teste automatiquement l'API.
-
-#### Services not starting?
-```bash
-# Check service status
-.\scripts\dev.ps1 status        # Windows
-make status                     # Linux/Mac
-
-# View logs
-.\scripts\dev.ps1 logs          # Windows
-make logs                       # Linux/Mac
-
-# Restart API services
-docker-compose restart api-php api-nginx
-```
+This script starts services in the correct order and automatically tests the API.
 
 #### Database Read-Only Error
-Si vous obtenez l'erreur `attempt to write a readonly database` :
+If you get the error `attempt to write a readonly database`:
 
 ```bash
 # Fix database permissions
@@ -101,392 +378,69 @@ make fix-permissions               # Linux/Mac
 docker-compose exec api-php chmod 666 database/database.sqlite
 ```
 
-**Database issues?**
+#### Queue Worker Issues
 ```bash
-# Reset database completely
-.\scripts\dev.ps1 fresh         # Windows
-make fresh                      # Linux/Mac
+# Restart queue worker
+docker-compose restart queue-worker
+
+# Check queue status
+docker-compose exec api-php php artisan queue:work --once
 ```
 
-**Port conflicts?**
-- Frontend (5173): Change in `docker-compose.yml` and `web/package.json`
-- Backend (8080): Change in `docker-compose.yml` and `api/.env`
-
-**502 Bad Gateway?**
+#### Cache Issues
 ```bash
-# Restart API services
-.\scripts\dev.ps1 restart       # Windows
-make restart                    # Linux/Mac
-```
-
----
-
-## 📋 Table of Contents
-
-- [🎯 Overview](#-overview)
-- [🏗️ Architecture](#️-architecture)
-- [📁 Project Structure](#-project-structure)
-- [🔧 Technology Stack](#-technology-stack)
-- [🧪 Testing](#-testing)
-- [📊 Quality Assurance](#-quality-assurance)
-- [🔒 Security Features](#-security-features)
-- [⚡ Performance & Scalability](#-performance--scalability)
-- [🔄 Development Workflow](#-development-workflow)
-- [📚 API Documentation](#-api-documentation)
-- [🐳 Docker Configuration](#-docker-configuration)
-- [🤝 Contributing](#-contributing)
-
-## 🎯 Overview
-
-ACME Donations is a comprehensive charitable donation platform designed for modern organizations. It provides a complete solution for campaign management, donation processing, user notifications, and administrative oversight.
-
-### ✨ Key Features
-
-- **🎨 Modern UI/UX**: Responsive design with Vue 3 + Tailwind CSS
-- **🔐 Secure Authentication**: Laravel Sanctum with SPA cookies
-- **📱 Real-time Notifications**: User notification system
-- **👥 Role-based Access**: Admin, Creator, and User roles
-- **💳 Payment Processing**: Mock gateway ready for Stripe integration
-- **📊 Analytics Dashboard**: Comprehensive campaign and donation insights
-- **🔄 Asynchronous Processing**: Queue-based donation processing
-- **🧪 Comprehensive Testing**: Unit, Feature, and E2E tests
-
-## 🏗️ Architecture
-
-### 🏛️ Monorepo Structure
-
-```
-acme-donations/
-├── api/                    # Laravel 12 Backend
-│   ├── app/               # Application logic
-│   ├── Modules/           # Modular architecture
-│   ├── database/          # Migrations, seeders, factories
-│   └── tests/             # Backend tests
-├── web/                   # Vue 3 Frontend
-│   ├── src/               # Source code
-│   ├── tests/             # Frontend tests
-│   └── dist/              # Built assets
-├── shared/                # Shared resources
-│   └── openapi/           # API specifications
-└── docker-compose.yml     # Development environment
-```
-
-### 🔧 Modular Backend Design
-
-The backend follows a **modular architecture** using `nwidart/laravel-modules` for future microservices migration:
-
-- **Auth Module**: User authentication and authorization
-- **Campaign Module**: Campaign management and CRUD operations
-- **Donation Module**: Donation processing and tracking
-- **Payment Module**: Payment gateway abstraction
-- **Admin Module**: Administrative functions and analytics
-- **Notification Module**: User notification system
-
-### 🌐 API-First Approach
-
-- **OpenAPI Specification**: Complete API documentation in `shared/openapi/`
-- **Type Generation**: Automatic TypeScript types from OpenAPI specs
-- **Contract-Driven Development**: Frontend and backend communicate via well-defined contracts
-
-
-## 📁 Project Structure
-
-### 🔧 Backend (`api/`)
-
-```
-api/
-├── app/
-│   ├── Http/Controllers/     # API Controllers
-│   ├── Models/              # Eloquent Models
-│   ├── Services/            # Business Logic
-│   ├── Jobs/                # Queue Jobs
-│   └── Contracts/           # Interfaces
-├── Modules/                 # Modular Components
-│   ├── Auth/               # Authentication
-│   ├── Campaign/           # Campaign Management
-│   ├── Donation/           # Donation Processing
-│   ├── Payment/            # Payment Gateway
-│   ├── Admin/              # Admin Functions
-│   └── Notification/       # Notifications
-├── database/
-│   ├── migrations/         # Database Schema
-│   ├── seeders/           # Data Seeders
-│   └── factories/         # Test Factories
-└── tests/
-    ├── Unit/              # Unit Tests
-    └── Feature/           # Integration Tests
-```
-
-### 🎨 Frontend (`web/`)
-
-```
-web/
-├── src/
-│   ├── components/         # Vue Components
-│   ├── views/             # Page Components
-│   ├── stores/            # Pinia State Management
-│   ├── router/            # Vue Router
-│   ├── api/               # API Client
-│   └── composables/       # Vue Composables
-├── tests/
-│   └── e2e/               # End-to-End Tests
-└── dist/                  # Built Assets
-```
-
-## 🔧 Technology Stack
-
-### 🖥️ Backend
-
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **PHP** | 8.4 | Runtime environment |
-| **Laravel** | 12.x | Web framework |
-| **Laravel Sanctum** | 4.x | SPA authentication |
-| **Spatie Permission** | 6.x | Role-based access control |
-| **nwidart/laravel-modules** | 12.x | Modular architecture |
-| **SQLite** | 3.x | Development database |
-| **Redis** | 7.x | Caching and sessions |
-| **Pest** | 3.x | Testing framework |
-| **PHPStan** | 2.x | Static analysis |
-
-### 🎨 Frontend
-
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **Vue.js** | 3.5.x | Frontend framework |
-| **TypeScript** | 5.x | Type safety |
-| **Vite** | 5.x | Build tool |
-| **Pinia** | 2.x | State management |
-| **Vue Router** | 4.x | Client-side routing |
-| **Tailwind CSS** | 4.1.x | Utility-first CSS |
-| **Axios** | 1.x | HTTP client |
-| **Vue Toastification** | 2.x | Notifications |
-| **Playwright** | 1.x | E2E testing |
-
-### 🐳 Infrastructure
-
-| Technology | Purpose |
-|------------|---------|
-| **Docker Compose** | Development environment |
-| **Nginx** | Web server |
-| **PHP-FPM** | PHP process manager |
-| **Redis** | Cache and session store |
-
-## 🧪 Testing
-
-### 🔬 Backend Testing
-
-```bash
-# Using Docker Compose directly
-docker-compose exec api-php ./vendor/bin/pest
-docker-compose exec api-php ./vendor/bin/pest tests/Unit/
-docker-compose exec api-php ./vendor/bin/pest tests/Feature/
-
-# Using PowerShell script (Windows)
-.\scripts\dev.ps1 test
-.\scripts\dev.ps1 test-unit
-.\scripts\dev.ps1 test-feature
-
-# Using Make (Linux/Mac)
-make test
-make test-unit
-make test-feature
-```
-
-### 🎭 Frontend Testing
-
-```bash
-# Unit tests
-docker-compose exec web npm run test
-
-# E2E tests
-docker-compose exec web npm run e2e
-
-# Type checking
-docker-compose exec web npm run type-check
-```
-
-### 📊 Test Coverage
-
-- **Unit Tests**: 100% model coverage
-- **Feature Tests**: 60% controller coverage
-- **E2E Tests**: Critical user journeys
-
-## 📊 Quality Assurance
-
-### 🔍 Static Analysis
-
-```bash
-# Using Docker Compose directly
-docker-compose exec api-php ./vendor/bin/phpstan analyse --level=8
-docker-compose exec api-php ./vendor/bin/pint
-docker-compose exec web npm run lint
-
-# Using PowerShell script (Windows)
-.\scripts\dev.ps1 phpstan
-.\scripts\dev.ps1 quality-check
-
-# Using Make (Linux/Mac)
-make phpstan
-make quality-check
-```
-
-### 🎯 Quality Metrics
-
-- **PHPStan Level 8**: Maximum static analysis strictness
-- **TypeScript Strict Mode**: Full type safety
-- **PSR-12 Compliance**: PHP coding standards
-- **ESLint Configuration**: Frontend code quality
-
-## 🔒 Security Features
-
-### 🛡️ Authentication & Authorization
-
-- **Laravel Sanctum**: SPA authentication with secure cookies
-- **CSRF Protection**: Cross-site request forgery prevention
-- **Role-based Access Control**: Admin, Creator, User roles
-- **Secure Headers**: CORS, CSP, and security headers
-
-### 🔐 Data Protection
-
-- **Password Hashing**: Bcrypt with configurable rounds
-- **SQL Injection Prevention**: Eloquent ORM with parameterized queries
-- **XSS Protection**: Input sanitization and output escaping
-- **Session Security**: HttpOnly, Secure, SameSite cookies
-
-## ⚡ Performance & Scalability
-
-### 🚀 Optimization Strategies
-
-- **Redis Caching**: Campaign listings and statistics
-- **Queue Processing**: Asynchronous donation processing
-- **Database Indexing**: Optimized queries with proper indexes
-- **Frontend Optimization**: Code splitting and lazy loading
-
-### 📈 Scalability Considerations
-
-- **Modular Architecture**: Easy extraction to microservices
-- **Database Agnostic**: SQLite for development, PostgreSQL for production
-- **Horizontal Scaling**: Stateless application design
-- **CDN Ready**: Static asset optimization
-
-## 🔄 Development Workflow
-
-### 🛠️ Development Commands
-
-```bash
-# Start development environment
-docker-compose --profile dev up -d
-
-# View logs
-docker-compose logs -f api-php
-docker-compose logs -f web
-
-# Run migrations
-docker-compose exec api-php php artisan migrate
-
-# Seed database
-docker-compose exec api-php php artisan db:seed
-
-# Clear caches
+# Clear all caches
 docker-compose exec api-php php artisan cache:clear
 docker-compose exec api-php php artisan config:clear
+docker-compose exec api-php php artisan route:clear
 ```
 
-### 🔧 Build Commands
-
+### Logs
 ```bash
-# Build frontend for production
-docker-compose exec web npm run build
+# View application logs
+docker-compose logs -f api-php
 
-# Generate API types
-docker-compose exec web npm run generate:types
+# View web server logs
+docker-compose logs -f api-nginx
 
-# Run all quality checks
-make quality-check
+# View queue worker logs
+docker-compose logs -f queue-worker
 ```
-
-## 📚 API Documentation
-
-### 📖 OpenAPI Specification
-
-The complete API documentation is available in `shared/openapi/acme.yaml`:
-
-- **Campaign Management**: CRUD operations for campaigns
-- **Donation Processing**: Payment and donation tracking
-- **User Management**: Authentication and profile management
-- **Admin Functions**: Analytics and campaign moderation
-- **Notifications**: User notification system
-
-### 🔗 API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/campaigns` | GET | List campaigns |
-| `/api/campaigns` | POST | Create campaign |
-| `/api/campaigns/{id}` | GET | Get campaign details |
-| `/api/donations` | POST | Process donation |
-| `/api/admin/dashboard` | GET | Admin dashboard data |
-| `/api/me/notifications` | GET | User notifications |
-
-## 🐳 Docker Configuration
-
-### 🏗️ Service Architecture
-
-```yaml
-services:
-  api-php:      # Laravel application
-  api-nginx:    # Web server
-  queue-worker: # Background job processing
-  web:          # Vue.js development server
-  redis:        # Cache and session store
-```
-
-### 🔧 Environment Profiles
-
-- **Development** (`--profile dev`): Full development environment
-- **Production** (`--profile prod`): Optimized production build
-
-### 📊 Resource Requirements
-
-- **Minimum**: 2GB RAM, 2 CPU cores
-- **Recommended**: 4GB RAM, 4 CPU cores
-- **Storage**: 2GB for dependencies and data
 
 ## 🤝 Contributing
 
-### 📋 Development Guidelines
+### Development Setup
+1. Fork the repository
+2. Clone your fork
+3. Create a feature branch
+4. Make your changes
+5. Run tests and static analysis
+6. Submit a pull request
 
-1. **Code Style**: Follow PSR-12 (PHP) and ESLint (TypeScript)
-2. **Testing**: Write tests for new features
-3. **Documentation**: Update API docs for new endpoints
-4. **Commits**: Use conventional commit messages
+### Code Standards
+- **PHP**: PSR-12 coding standard
+- **JavaScript/TypeScript**: ESLint configuration
+- **CSS**: Tailwind CSS utility classes
+- **Git**: Conventional commit messages
 
-### 🔄 Git Workflow
+### Testing Requirements
+- All new features must have tests
+- PHPStan Level 8 must pass
+- ESLint must pass
+- All existing tests must pass
 
-```bash
-# Create feature branch
-git checkout -b feature/new-feature
+## 📄 License
 
-# Make changes and test
-docker-compose exec api-php ./vendor/bin/pest
-docker-compose exec api-php ./vendor/bin/phpstan analyse --level=8
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-# Commit changes
-git commit -m "feat: add new feature"
+## 🙏 Acknowledgments
 
-# Push and create PR
-git push origin feature/new-feature
-```
-
-## 📞 Support
-
-For questions, issues, or contributions:
-
-- **Issues**: Create a GitHub issue
-- **Documentation**: Check the API docs in `shared/openapi/`
-- **Development**: Follow the development workflow above
+- **Laravel** - The PHP framework for web artisans
+- **Vue.js** - The progressive JavaScript framework
+- **Tailwind CSS** - A utility-first CSS framework
+- **Docker** - Containerization platform
+- **Redis** - In-memory data structure store
 
 ---
 
-**Built with ❤️ using Laravel, Vue.js, and modern web technologies**
+**Built with ❤️ for the community**

@@ -28,9 +28,7 @@
             :error="errors.password"
           />
 
-          <BaseAlert v-if="errors.general" variant="error" dismissible>
-            {{ errors.general }}
-          </BaseAlert>
+        
 
           <BaseButton
             type="submit"
