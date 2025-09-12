@@ -10,13 +10,7 @@
           <p class="text-gray-600">Fill in the details for your charitable campaign</p>
         </div>
 
-        <!-- Success Message -->
-        <BaseAlert v-if="successMessage" variant="success" dismissible class="mb-6">
-          <div>
-            <h4 class="font-medium">Campaign Created Successfully!</h4>
-            <p class="mt-1">{{ successMessage }}</p>
-          </div>
-        </BaseAlert>
+        <!-- Success messages are now handled by toast notifications -->
 
         <!-- Form Card -->
         <BaseCard>
@@ -26,25 +20,24 @@
               <h3 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
               
               <div class="space-y-4">
-                <BaseInput
+                <BaseInputWithTooltip
                   v-model="form.title"
                   label="Campaign Title"
                   placeholder="e.g., Help Families in Need"
                   required
-                  :error="errors.title"
+                  :error="validationErrors.title"
+                  @blur="validateSingle('title', form.title)"
                 />
 
-                <div class="form-group">
-                  <label class="form-label">Description *</label>
-                  <textarea
-                    v-model="form.description"
-                    placeholder="Describe your campaign and its goals..."
-                    required
-                    rows="4"
-                    :class="['form-textarea', { error: errors.description }]"
-                  ></textarea>
-                  <span v-if="errors.description" class="form-error">{{ errors.description }}</span>
-                </div>
+                <BaseTextarea
+                  v-model="form.description"
+                  label="Description"
+                  placeholder="Describe your campaign and its goals..."
+                  required
+                  :rows="4"
+                  :error="validationErrors.description"
+                  @blur="validateSingle('description', form.description)"
+                />
               </div>
             </div>
 
@@ -53,31 +46,25 @@
               <h3 class="text-lg font-semibold text-gray-900 mb-4">Campaign Details</h3>
               
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <BaseInput
+                <BaseInputWithTooltip
                   v-model="form.goal_amount"
                   label="Goal Amount (€)"
                   type="number"
-                  min="1"
-                  step="0.01"
                   placeholder="5000"
                   required
-                  :error="errors.goal_amount"
+                  :error="validationErrors.goal_amount"
+                  @blur="validateSingle('goal_amount', form.goal_amount)"
                 />
 
-                <div class="form-group">
-                  <label class="form-label">Category *</label>
-                  <select
-                    v-model="form.category_id"
-                    required
-                    :class="['form-select', { error: errors.category_id }]"
-                  >
-                    <option value="">Select a category</option>
-                    <option v-for="category in categories" :key="category.id" :value="category.id">
-                      {{ category.name }}
-                    </option>
-                  </select>
-                  <span v-if="errors.category_id" class="form-error">{{ errors.category_id }}</span>
-                </div>
+                <BaseSelect
+                  v-model="form.category_id"
+                  label="Category"
+                  placeholder="Select a category..."
+                  required
+                  :options="categoryOptions"
+                  :error="validationErrors.category_id"
+                  @blur="validateSingle('category_id', form.category_id)"
+                />
               </div>
             </div>
 
@@ -131,14 +118,21 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useToast } from 'vue-toastification'
 import { api } from '@/api/client'
 import AppNavbar from '@/components/layout/AppNavbar.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
-import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseInputWithTooltip from '@/components/ui/BaseInputWithTooltip.vue'
+import BaseTextarea from '@/components/ui/BaseTextarea.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseAlert from '@/components/ui/BaseAlert.vue'
+import { useFormValidation } from '@/composables/useFormValidation'
 
+const router = useRouter()
+const toast = useToast()
 const loading = ref(false)
 const categories = ref([])
 const successMessage = ref('')
@@ -150,6 +144,22 @@ const form = reactive({
   category_id: '',
   featured: false
 })
+
+// Form validation setup
+const { errors: validationErrors, validate, validateSingle, clearErrors: clearValidationErrors } = useFormValidation({
+  title: { required: true, minLength: 3, maxLength: 255 },
+  description: { required: true, minLength: 10, maxLength: 2000 },
+  goal_amount: { required: true, min: 1, max: 1000000 },
+  category_id: { required: true }
+})
+
+// Convert categories for BaseSelect
+const categoryOptions = computed(() => 
+  categories.value.map((cat: any) => ({
+    value: cat.id,
+    label: cat.name
+  }))
+)
 
 const errors = reactive({
   title: '',
@@ -163,6 +173,17 @@ const clearErrors = () => {
   Object.keys(errors).forEach(key => {
     errors[key] = ''
   })
+}
+
+const resetForm = () => {
+  Object.keys(form).forEach(key => {
+    if (key === 'featured') {
+      form[key] = false
+    } else {
+      form[key] = ''
+    }
+  })
+  clearValidationErrors()
 }
 
 const clearSuccessMessage = () => {
@@ -180,7 +201,13 @@ const handleSubmit = async () => {
 }
 
 const submitCampaign = async (status: 'draft' | 'pending') => {
-  clearErrors()
+  // Validate form first
+  if (!validate(form)) {
+    toast.error('Please fix the form errors before submitting.')
+    return
+  }
+
+  clearValidationErrors()
   loading.value = true
 
   try {
@@ -190,45 +217,43 @@ const submitCampaign = async (status: 'draft' | 'pending') => {
       goal_amount: parseFloat(form.goal_amount.toString())
     }
 
-    console.log('Submitting campaign:', campaignData)
-
     const response = await api.post('/api/campaigns', campaignData)
-    console.log('Campaign created successfully:', response.data)
 
-    // Show success message
+    // Show success notifications
     if (status === 'draft') {
-      successMessage.value = 'Campaign saved as draft successfully! You can continue editing or submit it for review later.'
+      toast.success('Campaign saved as draft successfully! 📝', {
+        timeout: 4000
+      })
+      // Keep form values for draft
     } else {
-      successMessage.value = 'Campaign submitted for review! It will be reviewed by administrators before going live.'
+      toast.success('Campaign submitted for review! 🎉', {
+        timeout: 4000
+      })
+      // Reset form and redirect for submission
+      resetForm()
+      setTimeout(() => {
+        router.push('/')
+      }, 1000)
     }
-
-    // Reset form
-    Object.keys(form).forEach(key => {
-      if (key === 'featured') {
-        form[key] = false
-      } else {
-        form[key] = ''
-      }
-    })
-
-    clearSuccessMessage()
 
   } catch (error: any) {
     console.error('Error creating campaign:', error)
 
     if (error.response?.status === 422) {
-      const validationErrors = error.response.data.errors || {}
-      Object.keys(validationErrors).forEach(key => {
-        if (errors.hasOwnProperty(key)) {
-          errors[key] = validationErrors[key][0] || ''
+      // Handle validation errors from server
+      const serverErrors = error.response.data.errors || {}
+      Object.keys(serverErrors).forEach(key => {
+        if (validationErrors.hasOwnProperty(key)) {
+          validationErrors[key] = serverErrors[key][0] || ''
         }
       })
+      toast.error('Please fix the form errors and try again.')
     } else if (error.response?.status === 419) {
-      errors.general = 'Security error (CSRF). Please refresh the page and try again.'
+      toast.error('Security error (CSRF). Please refresh the page and try again.')
     } else if (error.response?.status === 401) {
-      errors.general = 'You must be logged in to create a campaign.'
+      toast.error('You must be logged in to create a campaign.')
     } else {
-      errors.general = `Error: ${error.response?.data?.message || error.message || 'An unknown error occurred'}`
+      toast.error(`Error: ${error.response?.data?.message || error.message || 'An unknown error occurred'}`)
     }
   } finally {
     loading.value = false
