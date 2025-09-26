@@ -34,6 +34,11 @@ class Campaign extends Model
     
     /** @return HasMany<Donation, Campaign> */
     public function donations(): HasMany { return $this->hasMany(Donation::class); }
+    
+    /** @return HasMany<Donation, Campaign> */
+    public function successfulDonations(): HasMany { 
+        return $this->hasMany(Donation::class)->whereIn('status', ['completed', 'succeeded']); 
+    }
 }
 
 

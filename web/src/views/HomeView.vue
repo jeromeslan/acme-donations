@@ -45,6 +45,7 @@
       <MyCampaigns 
         v-if="!isAdmin && myCampaigns.length > 0" 
         :campaigns="myCampaigns" 
+        @campaign-updated="handleMyCampaignUpdated"
       />
 
       <!-- Featured Campaigns -->
@@ -186,6 +187,14 @@ const fetchMyCampaigns = async () => {
   } catch (error) {
     console.error('Error fetching my campaigns:', error)
     myCampaigns.value = []
+  }
+}
+
+const handleMyCampaignUpdated = (updatedCampaign: any) => {
+  // Find and update the campaign in the myCampaigns array
+  const index = myCampaigns.value.findIndex(campaign => campaign.id === updatedCampaign.id)
+  if (index !== -1) {
+    myCampaigns.value[index] = updatedCampaign
   }
 }
 

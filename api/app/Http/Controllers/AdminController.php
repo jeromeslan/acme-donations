@@ -178,7 +178,7 @@ class AdminController extends Controller
     {
         $campaigns = Campaign::query()
             ->with(['category', 'creator:id,name,email'])
-            ->withCount('donations')
+            ->withCount('successfulDonations as donations_count')
             ->orderByDesc('created_at')
             ->get();
 

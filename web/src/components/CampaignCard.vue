@@ -143,7 +143,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import DonationFlow from '@/components/DonationFlow.vue'
 
@@ -169,7 +169,12 @@ const props = defineProps<Props>()
 
 const showModal = ref(false)
 const showDonationModal = ref(false)
-const campaignData = ref<Campaign>(props.campaign)
+const campaignData = ref<Campaign>({ ...props.campaign })
+
+// Watch for changes in the prop and update local reactive data
+watch(() => props.campaign, (newCampaign) => {
+  campaignData.value = { ...newCampaign }
+}, { deep: true, immediate: true })
 
 const closeModal = () => {
   showModal.value = false

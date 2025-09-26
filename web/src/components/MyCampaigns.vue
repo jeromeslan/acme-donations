@@ -11,6 +11,7 @@
           v-for="campaign in campaigns"
           :key="campaign.id"
           :campaign="campaign"
+          @campaign-updated="$emit('campaign-updated', $event)"
         />
       </div>
     </div>
@@ -40,7 +41,12 @@ interface Props {
   campaigns: Campaign[]
 }
 
+interface Emits {
+  'campaign-updated': [campaign: Campaign]
+}
+
 defineProps<Props>()
+defineEmits<Emits>()
 </script>
 
 <style scoped>

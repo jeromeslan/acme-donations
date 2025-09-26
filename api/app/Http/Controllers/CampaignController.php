@@ -13,7 +13,7 @@ class CampaignController extends Controller
     {
         $cacheKey = 'campaigns:index:' . md5(json_encode($request->query()) ?: '');
         $ttl = 60; // seconds
-        $query = Campaign::query()->with('category')->withCount('donations')
+        $query = Campaign::query()->with('category')->withCount('successfulDonations as donations_count')
             ->when($request->filled('q'), function ($query) use ($request) {
                 $value = (string)$request->query('q');
                 return $query->where('title', 'like', "%{$value}%");
@@ -42,7 +42,7 @@ class CampaignController extends Controller
 
         // Safety fallback: if empty page but campaigns exist, return latest campaigns
         if ($page->total() === 0 && \App\Models\Campaign::query()->count() > 0) {
-            $fallback = Campaign::query()->with('category')->withCount('donations')->orderByDesc('id');
+            $fallback = Campaign::query()->with('category')->withCount('successfulDonations as donations_count')->orderByDesc('id');
             $page = $fallback->paginate(perPage: (int)$request->integer('per_page', 12));
         }
 
@@ -53,7 +53,7 @@ class CampaignController extends Controller
     {
         $featured = Cache::store('redis')->tags(['campaigns'])->remember('campaigns:featured', 60, fn() => Campaign::query()
             ->where('featured', true)->where('status', 'active')
-            ->with('category')->withCount('donations')
+            ->with('category')->withCount('successfulDonations as donations_count')
             ->orderByDesc('id')->limit(8)->get());
         
         return response()->json($featured);
@@ -61,7 +61,18 @@ class CampaignController extends Controller
 
     public function show(Campaign $campaign): \Illuminate\Http\JsonResponse
     {
-        $campaignData = Cache::store('redis')->tags(["campaign:{$campaign->id}", 'campaigns'])->remember("campaigns:show:{$campaign->id}", 60, fn() => $campaign->load('category')->loadCount('donations'));
+        $cacheKey = "campaigns:show:{$campaign->id}";
+        
+        $campaignData = Cache::store('redis')
+            ->tags(["campaign:{$campaign->id}", 'campaigns'])
+            ->remember($cacheKey, 60, function() use ($campaign) {
+                // Fresh fetch from database to ensure we have latest donated_amount
+                $freshCampaign = Campaign::with('category')
+                    ->withCount('successfulDonations as donations_count')
+                    ->find($campaign->id);
+                    
+                return $freshCampaign;
+            });
         
         return response()->json($campaignData);
     }
@@ -132,7 +143,7 @@ class CampaignController extends Controller
         $campaigns = Campaign::query()
             ->where('creator_id', $user->id)
             ->with('category')
-            ->withCount('donations')
+            ->withCount('successfulDonations as donations_count')
             ->orderByDesc('created_at')
             ->get();
 

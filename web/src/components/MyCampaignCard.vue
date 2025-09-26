@@ -164,7 +164,12 @@ interface Props {
   campaign: Campaign
 }
 
+interface Emits {
+  'campaign-updated': [campaign: Campaign]
+}
+
 const props = defineProps<Props>()
+const emit = defineEmits<Emits>()
 
 const showModal = ref(false)
 const showDonationModal = ref(false)
@@ -247,6 +252,10 @@ const startDonation = () => {
 const handleDonationSuccess = (updatedCampaign: Campaign) => {
   // Update the local campaign data with the new amounts
   campaignData.value = updatedCampaign
+  
+  // Emit the updated campaign to the parent component
+  emit('campaign-updated', updatedCampaign)
+  
   // Don't close the modal automatically - let the user see the thank you message
   // The modal will be closed when the user clicks "Close" or "View Updated Campaign"
   // The campaign cards will automatically update due to reactivity
