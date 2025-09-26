@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
+    /** @return \Illuminate\Database\Eloquent\Collection<int, Category> */
     public function index(): \Illuminate\Database\Eloquent\Collection
     {
         return Category::orderBy('name')->get();

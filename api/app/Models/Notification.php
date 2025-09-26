@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -22,11 +23,13 @@ class Notification extends Model
         'read_at' => 'datetime'
     ];
 
+    /** @return BelongsTo<User, Notification> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return BelongsTo<Campaign, Notification> */
     public function campaign(): BelongsTo
     {
         return $this->belongsTo(Campaign::class);
@@ -39,12 +42,12 @@ class Notification extends Model
         }
     }
 
-    public function scopeUnread(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    public function scopeUnread(Builder $query): Builder
     {
         return $query->whereNull('read_at');
     }
 
-    public function scopeForUser(\Illuminate\Database\Eloquent\Builder $query, int $userId): \Illuminate\Database\Eloquent\Builder
+    public function scopeForUser(Builder $query, int $userId): Builder
     {
         return $query->where('user_id', $userId);
     }

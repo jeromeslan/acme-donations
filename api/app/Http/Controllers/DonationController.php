@@ -35,6 +35,7 @@ class DonationController extends Controller
         return response()->json(['id' => $donation->id, 'correlation_id' => $correlationId], 202);
     }
 
+    /** @return \Illuminate\Contracts\Pagination\LengthAwarePaginator<int, \App\Models\Donation> */
     public function myDonations(Request $request): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
         $user = $request->user();

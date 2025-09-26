@@ -19,6 +19,7 @@ class DonationReceipt extends Model
         'metadata' => 'array',
     ];
 
+    /** @return BelongsTo<Donation, DonationReceipt> */
     public function donation(): BelongsTo { return $this->belongsTo(Donation::class); }
 }
 

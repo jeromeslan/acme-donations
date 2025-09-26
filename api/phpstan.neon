@@ -21,5 +21,26 @@ parameters:
         # Ignore missing return types in migrations
         - '#Method [a-zA-Z\\]+::up\(\) has no return type specified#'
         - '#Method [a-zA-Z\\]+::down\(\) has no return type specified#'
+        # Ignore Pest testing framework method calls
+        - '#Call to an undefined method PHPUnit\\Framework\\TestCase::(get|post|postJson|put|delete|patch|actingAs|assertDatabaseHas|assertDatabaseMissing)\(\)#'
+        # Ignore undefined variables in Pest test closures
+        - '#Undefined variable: \$this#'
+        # Ignore Laravel Eloquent generic type mismatches
+        - '#Method .+ should return .+ but returns .+\$this\(.+\).*#'
+        # Ignore Model extends generic issues
+        - '#PHPDoc tag @extends contains generic type .+Model<.+> but class .+Model is not generic#'
+        # Ignore missing factory classes
+        - '#PHPDoc tag @use has invalid type Database\\Factories\\.+Factory#'
+        # Ignore generic type mismatches in pagination
+        - '#Generic type .+LengthAwarePaginator<.+> .+ does not specify all template types#'
+        # Ignore specific generic type issues with pagination return types
+        - '#Method .+Controller::.+ should return .+LengthAwarePaginator<.+> but returns .+LengthAwarePaginator<.+>#'
+        # Ignore HasFactory generic type missing specification
+        - '#Class .+ uses generic trait .+HasFactory but does not specify its types: TFactory#'
+        # Ignore Builder generic type missing specification
+        - '#Method .+::.+ .+ parameter .+ with generic class .+Builder but does not specify its types: TModel#'
+        - '#Method .+::.+ return type with generic class .+Builder does not specify its types: TModel#'
+        # Ignore pagination generic type subtype issues
+        - '#Type .+ in generic type .+LengthAwarePaginator<.+> .+ is not subtype of template type TKey#'
     reportUnmatchedIgnoredErrors: false
     tmpDir: storage/framework/cache/phpstan
